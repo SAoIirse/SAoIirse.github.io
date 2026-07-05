@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>UPX脱壳 | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="壳什么是壳呢？壳大多分为两类：压缩壳和加密壳。 压缩壳压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat加密壳加密壳也称保护壳，应用有多种防止代码逆向分析的技术，主要的功">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UPX脱壳">
+<meta property="og:url" content="https://saoirse.github.io/2026/07/04/UPX%E8%84%B1%E5%A3%B3/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="壳什么是壳呢？壳大多分为两类：压缩壳和加密壳。 压缩壳压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat加密壳加密壳也称保护壳，应用有多种防止代码逆向分析的技术，主要的功">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/20260704173342_3_109.jpg">
+<meta property="article:published_time" content="2026-07-04T09:31:04.000Z">
+<meta property="article:modified_time" content="2026-07-05T02:42:34.958Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/20260704173342_3_109.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "UPX脱壳",
+  "url": "https://saoirse.github.io/2026/07/04/UPX%E8%84%B1%E5%A3%B3/",
+  "image": "https://saoirse.github.io/img/20260704173342_3_109.jpg",
+  "datePublished": "2026-07-04T09:31:04.000Z",
+  "dateModified": "2026-07-05T02:42:34.958Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/07/04/UPX%E8%84%B1%E5%A3%B3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'UPX脱壳',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/20260704173346_4_109.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">UPX脱壳</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">UPX脱壳</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-04T09:31:04.000Z" title="发表于 2026-07-04 17:31:04">2026-07-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-05T02:42:34.958Z" title="更新于 2026-07-05 10:42:34">2026-07-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/CTF/">CTF</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="壳"><a href="#壳" class="headerlink" title="壳"></a>壳</h1><p>什么是壳呢？壳大多分为两类：压缩壳和加密壳。<br><img src="/img/image-33.png"></p>
+<h2 id="压缩壳"><a href="#压缩壳" class="headerlink" title="压缩壳"></a>压缩壳</h2><h2 id="压缩壳早在-DOS-时代就已经出现，压缩壳可以帮助缩减-PE-文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat"><a href="#压缩壳早在-DOS-时代就已经出现，压缩壳可以帮助缩减-PE-文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat" class="headerlink" title="压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat"></a>压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。<br>常见的压缩壳有：Upx、ASpack、PECompat</h2><h2 id="加密壳"><a href="#加密壳" class="headerlink" title="加密壳"></a>加密壳</h2><p>加密壳也称保护壳，应用有多种防止代码逆向分析的技术，主要的功能是保护 PE 免受代码逆向分析。加密壳保护的 PE 程序通常比原文件大得多。目前加密壳大量用于对安全性要求高，对破解敏感的应用程序，同时也有恶意程序用于避免（降低）杀毒软件的检测查杀。</p>
+<h2 id="常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect"><a href="#常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect" class="headerlink" title="常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect"></a>常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect</h2><h2 id="壳加载的过程："><a href="#壳加载的过程：" class="headerlink" title="壳加载的过程："></a>壳加载的过程：</h2><h2 id="保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变"><a href="#保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变" class="headerlink" title="保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变"></a>保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变</h2><h2 id="获取程序API："><a href="#获取程序API：" class="headerlink" title="获取程序API："></a>获取程序API：</h2><ol>
+<li>一般壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这几个 API 函数</li>
+<li>如果需要其他 API 函数，则通过 LoadLibraryA(W) 或 LoadLibraryExA(W) 将 DLL 文件映射到调用进程的地址空间中</li>
+<li>如果 DLL 文件已被映射到调用进程的地址空间里，可以调用 GetModuleHandleA获得 DLL 模块句柄</li>
+<li>一旦 DLL 模块被加载，就可以调用 GetProcAddress 函数获取输入函数的地址</li>
+</ol>
+<h2 id="解密各区块数据"><a href="#解密各区块数据" class="headerlink" title="解密各区块数据 "></a>解密各区块数据 </h2><ol>
+<li>为达到保护源程序代码和数据的目的，一般会加密源程序文件的各个区块。在程序执行时外壳将这些区块数据解密，来让程序正常运行</li>
+<li>外壳一般按区块加密，按区块解密，并将解密的数据放回在合适的内存位置</li>
+</ol>
+<h2 id="跳转回原程序入口点"><a href="#跳转回原程序入口点" class="headerlink" title="跳转回原程序入口点 "></a>跳转回原程序入口点 </h2><ol>
+<li>在跳转回入口点之前，一般会恢复填写原 PE 文件输入表，并处理重定位项</li>
+<li>因为加壳时外壳自己构造了一个输入表，因此在这里需要重新对每一个 DLL 引入的所有函数重新获取地址，并填写到 IAT 表中</li>
+<li>做完上述工作后，会将控制权移交原程序，并继续执行</li>
+</ol>
+<h1 id="UPX壳"><a href="#UPX壳" class="headerlink" title="UPX壳"></a>UPX壳</h1><h2 id="加载原理：压缩区段-运行时解压"><a href="#加载原理：压缩区段-运行时解压" class="headerlink" title="加载原理：压缩区段 + 运行时解压"></a>加载原理：压缩区段 + 运行时解压</h2><p>UPX 的设计核心在于对 PE 文件结构的重组和一段自解压代码。</p>
+<p>1.结构重组与压缩<br>UPX 首先对原始 PE 文件的各区段（如代码段 .text、数据段 .data）进行高比例压缩，并将压缩后的内容合并存入一个新区段 UPX1。同时，它会在文件中预留另一个区段 UPX0，该区段在磁盘上大小通常为 0，但被声明为在内存中拥有完整展开空间，用于后续存放解压后的原始代码与数据。对于资源段 .rsrc，UPX 一般保留原样或仅做轻微处理，以便系统在不解压的情况下仍能正常读取图标等资源信息。</p>
+<p>2.自解压代码（Stub）接管入口<br>加壳后，程序的入口点（OEP）被修改，指向 UPX 附加在文件末尾的自解压代码（Stub）。当程序被加载执行时，系统首先运行的并非原始程序逻辑，而是这段 Stub 代码，从而开始解压流程。</p>
+<p>3.现场保护与解压修复<br>Stub 代码开始执行时，首先执行 pushad 指令，将所有通用寄存器的当前值压入堆栈，以保存加壳前的“现场”状态。随后，Stub 将 UPX1 区段中的压缩数据解压到预先预留的 UPX0 内存区域，并在此过程中完成必要的 PE 结构修复工作，包括重建导入地址表（IAT）等，确保解压后的程序能正确调用外部 API。</p>
+<p>4.恢复现场与权利工作移交<br>解压及初始化工作全部完成后，Stub 执行 popad 指令，从堆栈恢复所有通用寄存器的原始值，使 CPU 状态回到加壳前的模样。最后，通过一条远跳转指令（jmp）跳转到原始程序的真正入口点（OEP），将执行权完整、干净地移交给原始程序，至此加壳程序完成使命，原始逻辑开始运行。</p>
+<h2 id="未运行时区段状态："><a href="#未运行时区段状态：" class="headerlink" title="未运行时区段状态："></a>未运行时区段状态：</h2><p>● UPX0 区段：原始数据大小（VirtualSize）很大，比如 0x19000，但在磁盘上的大小（RawSize）几乎为 0 或很小。<br>● UPX1 区段：占据了文件的大部分体积，包含了经过 LZMA 或 NRV 算法高强度压缩后的原始程序代码和数据。<br>● .rsrc 区段：通常保持原样，存放图标、版本信息等资源，以便操作系统在不完全解压时也能读取。</p>
+<h2 id="运行时内存动态变化"><a href="#运行时内存动态变化" class="headerlink" title="运行时内存动态变化"></a>运行时内存动态变化</h2><p>Step 1: 系统加载与 Stub 接管 (对应流程图 A -&gt; B)<br>● 变化：操作系统将上述三个区段装载到内存中。<br>  ○ UPX0 被分配了一块指定大小的空内存页（全是 00 或随机数据）。<br>  ○ UPX1 被完整载入，包含压缩数据和 Stub 代码。<br>● CPU 视角：EIP（指令指针）直接跳转到 UPX1 区段内的 Stub 代码开始执行。<br>Step 2: 保护现场 (对应流程图 B1)<br>● 变化：执行 pushad。<br>● 内存表现：所有通用寄存器的值（EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI）被依次压入当前堆栈。<br>● 目的：这是在执行解压这个”脏活累活”前，把原始程序即将用到的寄存器环境备份起来。<br>Step 3: 解压循环 (对应流程图 B2)<br>● 变化：这是内存变动最剧烈的阶段。<br>  ○ 读取：CPU 从 UPX1 区段读取压缩数据流。<br>  ○ 解算：Stub 中的解压算法实时解算数据。<br>  ○ 写入：将解压后的原始机器码写入到 UPX0 区段预留的空内存页中。<br>● 核心逻辑：磁盘上空无一物的 UPX0 此刻被动态填充，变回了原本的 .text (代码段) 和 .data (数据段)。<br>Step 4: 修复导入表 (对应流程图 B3)<br>● 变化：写入 UPX0 的数据中，调用外部 DLL 函数的地址（IAT）是不对的。Stub 会解析原程序的导入表结构，调用 GetProcAddress 获取真实 API 地址，并覆盖写入到 UPX0 对应的内存位置。<br>Step 5: 恢复现场与交接 (对应流程图 B4 -&gt; C)<br>● 变化：<br>  a. 执行 popad。刚才压在栈底的原始寄存器值被弹回 CPU，CPU 的环境恢复如初。<br>  b. 执行 jmp OEP。CPU 的指令指针 EIP 离开 UPX1，跨区段跳入 UPX0。<br>● 最终状态：此时内存中，UPX0 已经变成了完全可运行的原始程序，CPU 开始从原始入口点执行代码。UPX1 里的 Stub 代码使命完成，处于”闲置”状态。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>理解上述内存变化后我们就能理解动态脱壳的时候，我们要找什么了！<br>1.找到写入完成的瞬间：upx0数据写入完成，寄存器恢复（popad之后）<br>2.找到跨区段跳跃的瞬间：EIP从UPX1跳转到UPX0时的jmp指令。这个跳转目标就是我们要dump的原始程序的入口点</p>
+<h1 id="OEP寻找"><a href="#OEP寻找" class="headerlink" title="OEP寻找"></a>OEP寻找</h1><h2 id="通过分析OEP的特征码和API"><a href="#通过分析OEP的特征码和API" class="headerlink" title="通过分析OEP的特征码和API"></a>通过分析OEP的特征码和API</h2><p>熟记各类程序OEP特征，通过这些特征去定位，比如说vs2017 编译的程序 OEP附近有kernelbase.GetSystemTimeAsFileTime，在这个api上打断点，然后不停运行，命中断点后看返回地址是否在.text节区即可，定位到了API，然后去对比特征验证该程序的编译器类型，最后根据特征找到OEP<br>或者一般分析程序时，程序目录中还有其他一些dll，它们可能没加壳，用查壳工具搜一下，即可获取该程序的编译器类型，然后根据该编译器类型编译出来的程序OEP的入口特征搜索或在API打断点，即可定位到OEP</p>
+<h2 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h2><h3 id="寻找目标进程的编译特点"><a href="#寻找目标进程的编译特点" class="headerlink" title="寻找目标进程的编译特点"></a>寻找目标进程的编译特点</h3><p>比如说，和这个程序放在一起使用的dll文件，可以曲线救国，通过查看dll程序编译的版本确定版本的编译代码特征。<br>比如vs2019编译的32位程序特点：离入口点最近的API是ucrtbase.dll的initterm_e，并且堆栈回溯第二个返回地址就是入口点</p>
+<h3 id="使用API定位到OEP附近"><a href="#使用API定位到OEP附近" class="headerlink" title="使用API定位到OEP附近"></a>使用API定位到OEP附近</h3><p>定位到tls回调函数(因为tls有内存保护检查，所以不能断EP，而是要把断点下在TLS函数)</p>
+<ol>
+<li>正常执行顺序：程序启动 -&gt; 执行 TLS 回调函数 -&gt; 执行程序入口点 (EP)</li>
+<li>VMP 的保护机制：VMP 在 TLS 回调函数里，写入了内存保护检查代码。它会检查从 EP 开始的代码有没有被修改（比如有没有被下 int 3 断点）。<br>(因为tls有内存保护检查，所以不能断EP)</li>
+</ol>
+<h3 id="根据堆栈平衡定位OEP"><a href="#根据堆栈平衡定位OEP" class="headerlink" title="根据堆栈平衡定位OEP"></a>根据堆栈平衡定位OEP</h3><h4 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h4><p>程序加壳有一个原则，程序跑到OEP时，栈地址必须要保持到EP时一致。<br>由此我们可以在EP处，在栈寄存器指向的地址 - 4 处打硬件写入断点，然后不停的运行，直到程序中断到.text节区中，即可定位到OEP附近</p>
+<h4 id="入口特征总结"><a href="#入口特征总结" class="headerlink" title="入口特征总结"></a>入口特征总结</h4><p>masm程序入口：<br>汇编语言编写.asm文件<br>push 0x0<br>jmp.&amp;kernel32.GetModuleHandleA</p>
+<p>autoit程序入口：<br>AutoIt 是一个专门为 Windows GUI 自动化设计的免费脚本语言。它的核心理念很简单：模拟用户的鼠标点击、键盘输入和窗口操作，让电脑自动完成重复性的任务。<br>call  ？？？？<br>  jmp ？？？？<br>int3<br>  int3<br>push edi<br>push esi</p>
+<p>BC++程序入口：<br><img src="/img/image-34.png"></p>
+<p>Delphi 程序入口特征：<br>push ebp<br>   mov ebp,esp<br>    add esp,-0x10<br>mov eax,？？？？</p>
+<p>敲黑板，再解释–为什么会说关键标志是要找区段跨越？<br>因为，当程序被加壳的时候会在data区段或者其他自定义段添加壳程序的数据，那此时为了保护原来的程序（本来存储在text代码段）会将源程序的text段压缩到data段，并将入口指向data段。</p>
+<h1 id="脱壳方法"><a href="#脱壳方法" class="headerlink" title="脱壳方法"></a>脱壳方法</h1><p>当然最简单的莫过于直接利用UPX工具输入命令进行脱壳，但我们在CTF中难度稍高的题目就不会这么考了。出题人仁慈一点给你一个魔改，此时放到010中修改一下魔改的部分就能回到直接使用upx工具脱壳的简单步骤，那终极的考验就是让你去手脱这个壳喽。为了应对成功见到程序放入我们ida老婆那一刻，就必然要学习一下手脱了。<br>（这里都是基于OLLYDBG进行的手脱方法演示）</p>
+<h2 id="单步跟踪法-–-万能但是工作量巨大"><a href="#单步跟踪法-–-万能但是工作量巨大" class="headerlink" title="单步跟踪法 – 万能但是工作量巨大"></a>单步跟踪法 – 万能但是工作量巨大</h2><p>单步跟踪法的核心，是利用调试器（如 Ollydbg）的单步步入（F7）、单步步过（F8）和运行到选定位置（F4）功能，逐条或分段执行加壳程序的自解压代码，在避开复杂循环的同时确保不遗漏关键跳转，最终在解压完成后准确抵达原始程序入口点（OEP），并进行内存转储（Dump）。</p>
+<h3 id="具体操作："><a href="#具体操作：" class="headerlink" title="具体操作："></a>具体操作：</h3><p>1.以步过为主，优先实现跨段跳转<br>程序加载后，首先使用 F8（步过） 单步向下执行。遇到向下的 jmp 跳转指令时，优先让其跳转，以快速推进执行流，避免停留在当前代码块中。</p>
+<p>2.遇到大循环时，用“运行到选定位置”跳过<br>单步过程中经常会遇到重复次数多、逻辑复杂的大型循环。此时不要在循环中逐条单步，而是将光标移动到循环体之后的指令行，按 F4（运行到选定位置），让程序直接执行完循环并停在你指定的下一行，从而高效跳过循环干扰。</p>
+<p>3.近 Call 指令主动进入，防止错过关键解码<br>当遇到近调用（call 指令，且目标地址较近）时，尽量不要用 F8 直接步过，而是改用 F7（步入） 进入该 call 内部执行。因为很多加壳程序会将部分解压或修复代码放在此类 call 中，直接跳过可能遗漏重要初始化步骤，导致后续无法正确抵达 OEP。</p>
+<p>4.关注大幅度跳转，定位 OEP<br>在执行过程中，凡是遇到跳转跨度很大（例如从当前区段跳向另一个区段，或跳向 UPX0 等区段）的 jmp 指令，此跳转极有可能就是自解压代码结束、跳往原始 OEP 的最终转移。遇到此类跳转时需格外留意，单步跟踪进去，即可到达原始程序的真正入口点。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>其实就是在走完壳的程序流程，让他进行自解压。<br>保持近call原则，近入口点的call指令单步步进跳转：防止线程跑偏<br><img src="/img/image-35.png"><br>调试原则：不要改变程序跳转条件。原本向下跳转的步过进行，原本不跳转的就步过进行，原本向上跳转的F4越过。直到发生区段跳转：<br><img src="/img/image-36.png"><br>区段跳转会有明显的指令可以观察，在此恢复分析就行<br><img src="/img/image-37.png"><br>恢复后代码是正常的，真正的oep<br><img src="/img/image-38.png"></p>
+<h2 id="ESP定律-–-堆栈平衡定律"><a href="#ESP定律-–-堆栈平衡定律" class="headerlink" title="ESP定律 – 堆栈平衡定律"></a>ESP定律 – 堆栈平衡定律</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p>利用 pushad &#x2F; popad 的对称性定位 OEP<br>pushad 指令会将所有通用寄存器的值压入堆栈，而对应的 popad 指令一定会从同一堆栈位置恢复这些值。因此，pushad 执行时写入的栈地址，必然会被 popad 再次访问。在该栈地址上设置硬件断点（硬件访问断点），即可在 popad 执行的那一刻精准中断——这个时刻恰好是解压完成、即将跳往原始入口点（OEP）之前的最近位置。</p>
+<h3 id="具体操作：-1"><a href="#具体操作：-1" class="headerlink" title="具体操作："></a>具体操作：</h3><p>1.载入加壳程序后，从入口开始单步执行，步过（Step Over）每一条指令，直到执行到 pushad 指令。<br>执行完 pushad 后，观察堆栈窗口，找到栈顶指针 ESP 所指向的地址（此时该地址处存放的正是刚刚压入的第一个寄存器的值）。<br>2.右键点击该栈地址，选择 硬件断点（Hardware Breakpoint） → 访问断点（Access）（或写断点，视调试器选项而定）。<br>3.设置好断点后，按 F9 运行程序。调试器将在 popad 访问该栈地址时自动中断，此时程序已经完成解压与修复，正处于 popad 指令执行后、远跳转到 OEP 之前的关键位置，随后单步跟入跳转即可到达原始 OEP。</p>
+<p>这里解释为什么要用HW硬件断点，而不是普通断点？<br>首先我们要明白，普通断点可以修改代码字节但容易被壳检测到，所以普遍适用于静态代码位置。而硬件断点是利用CPU调试寄存器，不修改代码，比较隐蔽不容易被壳检测到，所以大多需要动态监控内存和对栈地址访问时，使用HW断点。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>● 不是所有壳都适用：ESP定律对UPX、ASPack等压缩壳非常有效，但对一些强壳（如VMProtect、Themida）可能无效，因为它们不会用简单的 pushad &#x2F; popad 模式。<br>● ESP变红不是唯一信号：有些壳用 pushfd &#x2F; popfd 而不是 pushad，原理相同，注意观察即可。<br>● 设断点时机：在ESP刚刚变红的那一刻设断点，而不是等执行了好多步之后。</p>
+<h2 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h2><p><img src="/img/image-39.png"><br>进入程序第一步就是push，那接下来就是步过执行这一步，再设置断点进行访问被push储存的寄存器<br><img src="/img/image-40.png"><br>F9运行程序<br><img src="/img/image-41.png"></p>
+<h2 id="内存镜像法"><a href="#内存镜像法" class="headerlink" title="内存镜像法"></a>内存镜像法</h2><p>内存镜像法是我们在加壳程序被加载时,进入到程序虚拟内存区段. 通过加两次内存一次性断点, 到达程序正确 OEP 的位置.内存镜像法的原理在于对程序资源段和代码段下断点,具体要多了解一下PE壳。</p>
+<h2 id="此处解答为什么要对TEXT和RSRC两段下断点？"><a href="#此处解答为什么要对TEXT和RSRC两段下断点？" class="headerlink" title="此处解答为什么要对TEXT和RSRC两段下断点？"></a>此处解答为什么要对TEXT和RSRC两段下断点？</h2><p>因为，程序运行时会解压原始代码到.text，而资源.rsrc是在最后才被解压。当程序访问到资源段的时候就说明程序已经被解压完成，之后需要跳转回到text段。</p>
+<h3 id="重要步骤："><a href="#重要步骤：" class="headerlink" title="重要步骤："></a>重要步骤：</h3><ol>
+<li>选择菜单的选项-&gt;调试选项-&gt;异常</li>
+<li>勾选所有的忽略异常</li>
+<li>按下ALT+M, 打开内存镜像, 找到程序的第一个.rsrc, 按 F2 下断点, 然后按SHIFT+F9运行到断点</li>
+<li>再按ALT+M, 打开内存镜像, 找到程序的第一个.rsrc上面的.text, 按 F2 下断点. 然后按SHIFT+F9</li>
+</ol>
+<h3 id="示例-2"><a href="#示例-2" class="headerlink" title="示例"></a>示例</h3><p><img src="/img/image-42.png"><br><img src="/img/image-43.png"><br><img src="/img/image-44.png"><br>F9运行程序<br><img src="/img/image-45.png"><br>之后同样在text区域设置断点，F9几次就能找到oep跳转入口。</p>
+<h2 id="脱壳之后"><a href="#脱壳之后" class="headerlink" title="脱壳之后"></a>脱壳之后</h2><p>我们会发现脱壳之后程序是运行不起来的，会显示如下图报错<br><img src="/img/image-46.png"><br>说明脱壳后的程序无法正确找到或执行其导入的函数。核心原因是 OllyDump 的“重建输入表”功能对 UPX 壳没有完美工作</p>
+<h3 id="如何正确修复？"><a href="#如何正确修复？" class="headerlink" title="如何正确修复？"></a>如何正确修复？</h3><h2 id="使用-ImportREC"><a href="#使用-ImportREC" class="headerlink" title="使用 ImportREC"></a>使用 ImportREC</h2><p>对于 UPX 这种压缩壳，我们放弃 OllyDump 的自动修复功能，采用标准的“两步走”：先 Dump，后手动修复。原理本质：把函数对应表中的名字修复回地址，使其能够运行<br>第一步：用 OllyDump 再次 Dump，但这次不勾选“重建输入表”</p>
+<ol>
+<li>确认你仍处于 OEP 处（004010CC）。</li>
+<li>打开 OllyDump，这次取消勾选“重建输入表”。</li>
+<li>点击“脱壳”，将文件另存为，例如 dump.exe。这个文件目前是“残废”的，需要下一步来修复。<br>第二步：使用 ImportREC 手动修复导入表</li>
+<li>打开 ImportREC：建议以管理员身份运行。</li>
+<li>附加进程：在 ImportREC 顶部的下拉列表中，选中你正在调试的 NotePad.exe 进程。</li>
+<li>填写 OEP 信息：<br>  ○ 在 OEP 输入框中，填入 000010CC。<br>  ○ 点击 IAT Autosearch 按钮。ImportREC 通常能自动找到导入表。<br>  ○ 如果成功，会弹窗提示“发现信息…”，点击确定。再点击 Get Imports 按钮，它会列出所有导入的函数。</li>
+<li>修复文件：<br>  ○ 点击 Fix Dump 按钮。<br>  ○ 在弹出的对话框中，选择你刚才 Dump 出来的 dump.exe 文件。</li>
+<li>得到脱壳文件：ImportREC 会生成一个名为 dump_.exe 的文件，这个就是修复好导入表、可以正常运行的脱壳程序。</li>
+</ol>
+<p>示例都是参考文章中的示例程序，参考文章如下：<br><a target="_blank" rel="noopener" href="https://ctf-wiki.org/reverse/platform/windows/unpack/sfx/">https://ctf-wiki.org/reverse/platform/windows/unpack/sfx/</a><br>此处文章只介绍了三个比较常用的脱壳方法，还有SFX和最后一次异常法详见上述链接文章。</p>
+<h1 id="以例题-青少年CTF-Debug-介绍用x64dbg手脱upx壳"><a href="#以例题-青少年CTF-Debug-介绍用x64dbg手脱upx壳" class="headerlink" title="以例题 青少年CTF Debug 介绍用x64dbg手脱upx壳"></a>以例题 青少年CTF Debug 介绍用x64dbg手脱upx壳</h1><p>放到exeinfo去查壳，会发现有壳，而且直接提示我们无法用upx -d。那就放到x64中进行手脱，这里使用esp方法<br><img src="/img/image-47.png"><br>进来x64系统自动断点在系统入口位置，F9运行直到出现大量push<br><img src="/img/image-48.png"><br>单步步过执行一个push，把寄存器信息压入栈中，得到栈地址，此时对esp地址进行硬件访问断点。<br><img src="/img/image-49.png"><br><img src="/img/image-50.png"><br>下断之后，F9运行到pop，此时真正的程序已经被解压缩完成。<br><img src="/img/image-51.png"><br>继续F8单步步过程序，运行直到遇到一个jmp的大跳F7，转入真正的oep。<br><img src="/img/image-52.png"><br><img src="/img/image-53.png"><br>在X64中的解压缩程序和onlydbg中的不同，这里大量jmp的部分就是真正被加密保护的程序。使用Scylla对程序进行dump<br><img src="/img/image-54.png"><br>得到一个不被保护的程序，当然还需要修复导出表，所以最后得到一个名为Debug_dump_SCY的程序这里我只是为了区分做一个数字标注。<br><img src="/img/image-55.png"><br>脱壳后放入ida查看代码真正的加密逻辑，发现这里面还有SMC。<br><img src="/img/image-56.png"><br><img src="/img/image-57.png"><br>而且SMC的加密逻辑还是汇编代码，从逻辑中认为汇编代码的意思是对这些数据中的每一个字节都和0E8异或。<br><img src="/img/image-58.png"><br>所以我们根据汇编代码逻辑进行第一个对加密代码解密的exp编写：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">import idaapi</span><br><span class="line">import idc</span><br><span class="line"></span><br><span class="line">def decrypt_smc():</span><br><span class="line">    func_addr = idc.get_name_ea_simple(<span class="string">&quot;sub_14006C5E0&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> func_addr == idc.BADADDR:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[-] 未找到 sub_14006C5E0&quot;</span>)</span><br><span class="line">        <span class="built_in">return</span> False</span><br><span class="line">    offset = idc.get_wide_dword(func_addr + 1)</span><br><span class="line">    base = func_addr + 5 + offset</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;[+] sub_14006C5E0 地址: 0x&#123;func_addr:X&#125;&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;[+] 偏移量: 0x&#123;offset:X&#125;&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;[+] 解密基址: 0x&#123;base:X&#125;&quot;</span>)</span><br><span class="line">    start_offset = 0x8E</span><br><span class="line">    size = 0x143  <span class="comment"># 323 字节（循环条件 cmp var_10C, 143h）</span></span><br><span class="line">    xor_key = 0xE8</span><br><span class="line">    decrypt_start = base + start_offset</span><br><span class="line">    decrypt_end = decrypt_start + size</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;[+] 解密范围: 0x&#123;decrypt_start:X&#125; - 0x&#123;decrypt_end:X&#125; (共 &#123;size&#125; 字节)&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> range(size):</span><br><span class="line">        addr = decrypt_start + i</span><br><span class="line">        encrypted_byte = idc.get_wide_byte(addr)</span><br><span class="line">        decrypted_byte = encrypted_byte ^ xor_key</span><br><span class="line">        idc.patch_byte(addr, decrypted_byte)</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;[+] 解密完成！已处理 &#123;size&#125; 个字节，XOR Key: 0x&#123;xor_key:02X&#125;&quot;</span>)</span><br><span class="line">    <span class="built_in">return</span> True</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    decrypt_smc()</span><br></pre></td></tr></table></figure>
+<p>得到数据真正的加密逻辑，期间还可能遇到花指令或者恢复不成功的情况，每一次尝试恢复的时候情况都不太一样，没关系多试几次就好了，我有的是力气和手段。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">__int64 __fastcall sub_14006C5E0(__int64 a1, __int64 a2, __int64 a3)</span><br><span class="line">&#123;</span><br><span class="line">  char *v4; // [rsp+28h] [rbp+8h]</span><br><span class="line">  unsigned __int8 v5; // [rsp+44h] [rbp+24h]</span><br><span class="line">  unsigned __int8 v6; // [rsp+44h] [rbp+24h]</span><br><span class="line">  int i; // [rsp+64h] [rbp+44h]</span><br><span class="line">  int j; // [rsp+84h] [rbp+64h]</span><br><span class="line"></span><br><span class="line">  j___CheckForDebuggerJustMyCode(byte_140176015, a2, a3);</span><br><span class="line">  v4 = (char *)j___acrt_fltout + *(unsigned int *)((char *)sub_140065C4C + <span class="number">1</span>);</span><br><span class="line">  v5 = sub_140064EC8();</span><br><span class="line">  for ( i = <span class="number">0</span>; i &lt; <span class="number">323</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    sub_140063186(v5);</span><br><span class="line">    v4[i + <span class="number">142</span>] ^= <span class="number">0</span>xE8u;</span><br><span class="line">  &#125;</span><br><span class="line">  v6 = sub_140064EC8();</span><br><span class="line">  for ( j = <span class="number">0</span>; j &lt; <span class="number">40</span>; ++j )</span><br><span class="line">  &#123;</span><br><span class="line">    if ( *(unsigned __int8 *)(a1 + j) &lt;= <span class="number">0</span>x40u || *(unsigned __int8 *)(a1 + j) &gt;= <span class="number">0</span>x5Bu )</span><br><span class="line">    &#123;</span><br><span class="line">      if ( *(unsigned __int8 *)(a1 + j) &lt;= <span class="number">0</span>x60u || *(unsigned __int8 *)(a1 + j) &gt;= <span class="number">0</span>x7Bu )</span><br><span class="line">      &#123;</span><br><span class="line">        *(_BYTE *)(a1 + j) -= <span class="number">30</span>;</span><br><span class="line">        *(_BYTE *)(a1 + j) ^= <span class="number">0</span>x51u;</span><br><span class="line">      &#125;</span><br><span class="line">      else</span><br><span class="line">      &#123;</span><br><span class="line">        *(_BYTE *)(a1 + j) -= <span class="number">32</span>;</span><br><span class="line">        *(_BYTE *)(a1 + j) ^= <span class="number">0</span>xCDu;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">      *(_BYTE *)(a1 + j) += <span class="number">32</span>;</span><br><span class="line">      *(_BYTE *)(a1 + j) ^= <span class="number">0</span>xABu;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return sub_140063186(v6);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从真正的加密逻辑中，我们大概知道是根据大小写的判断进行不一样的加密：<br>大写字符加密逻辑在外层的else中，小写字符在内层的else加密逻辑中，其他字符在内层的if加密逻辑中，根据加密逻辑写出最后的exp：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">enc = [0xcf, 0xd9, 0xc0, 0xc8, 0xdf, 0xcd, 0xc, 0xd2, 0x43, 0x98, 0x10, 0xc0, 0x83, 0x43, 0x9a, 0x10, 0xcd, 0x42, 0x8c,</span><br><span class="line">       0x4a, 0x10, 0xc8, 0x82, 0x83, 0x4a, 0x9f, 0x8c, 0xdf, 0x98, 0x42, 0x8c, 0xdf, 0x84, 0x82, 0x83, 0x46, 0x52, 0x52,</span><br><span class="line">       0x52, 0xe, ]</span><br><span class="line">de_flag = [0] * len(enc)</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(len(enc)):</span><br><span class="line">    tmp = enc[i]</span><br><span class="line">    orig_lower = (tmp ^ 0xCD) + 0x20</span><br><span class="line">    <span class="keyword">if</span> 0x61 &lt;= orig_lower &lt;= 0x7A:</span><br><span class="line">        de_flag[i] = orig_lower</span><br><span class="line">        <span class="built_in">continue</span></span><br><span class="line">    orig_upper = (tmp ^ 0xAB) - 0x20</span><br><span class="line">    <span class="keyword">if</span> 0x41 &lt;= orig_upper &lt;= 0x5A:</span><br><span class="line">        de_flag[i] = orig_upper</span><br><span class="line">        <span class="built_in">continue</span></span><br><span class="line">    de_flag[i] = (tmp ^ 0x51) + 0x1E</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;&#x27;</span>.<span class="built_in">join</span>(chr(x) <span class="keyword">for</span> x <span class="keyword">in</span> de_flag), end=<span class="string">&#x27;&#x27;</span>)</span><br><span class="line"><span class="comment">#DRKCTF&#123;Y0u_Kn0w_F1a9_Con9raTu1aTion5!!!&#125;</span></span><br></pre></td></tr></table></figure>
+<p>好了。对于UPX脱壳的部分就介绍这么多吧，其实无论是x86还是ollydbg都是换汤不换药的方法，只不过在汇编代码显示上有一些差距，还有最后dump程序的插件上有些区别。个人认为esp定律是最简洁且实用的方法，对于之后碰到的别的壳也是适用的。</p>
+<p>！！！！！XCTF的题怎么这么难，难哭了TAT</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/07/04/UPX%E8%84%B1%E5%A3%B3/">https://saoirse.github.io/2026/07/04/UPX脱壳/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CTF/">CTF</a><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91/">逆向</a></div><div class="post-share"><div class="social-share" data-image="/img/20260704173342_3_109.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/07/01/SMC/" title="SMC"><img class="cover" src="/img/20260702160038_24_130.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">SMC</div></div><div class="info-2"><div class="info-item-1">SMC混淆SMC混淆是一种自修改代码技术，通过在程序运行时动态解密加密的代码段，防止静态分析和逆向工程。 123456IF .运行条件满足  CALL DecryptProc （Address of MyProc）;对某个函数代码解密  ........  CALL MyProc                           ;调用这个函数  ........  CALL EncryptProc （Address of MyProc）;再对代码进行加密，防止程序被Dump SMC混淆原理：SMC最直接的方式是通过修改PE文件的数据段和代码段来进行混淆，或者通过修改PE文件的Section Header,搭配使用API Hook实现代码加密和解密，同时会在加密过程中使用VMProtect等第三方加密工具。因此在SMC中存在标志函数：VirtualProtect（），并且SMC中还会出现代码爆红现象，跟踪到汇编代码就能看到爆红部分是大片的数据，如下图所示。 反混淆方式大多数题目在代码中都是能够找到SMC加密逻辑的，只不过有的可能在反编译的时候就能看到，有的只能在汇编看到。只要能...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img class="cover" src="/img/CTFnixiang.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">加密算法</div></div><div class="info-2"><div class="info-item-1">正好赶上复习，那我们一起重走来时路吧~  加密算法篇BASE家族base64base64加密原理：base64加密本质是一种编码形式，数据以一种二进制文本的形式传递，编码过程分为三步1.将ASCII转换为对应的八位二进制数据2.合并起来，再以6位一组重新分配3.六位值映射到base64字符表位数不足时，在末尾补0，直至补齐组内位数 特征识别：● 字符串编码表识别● 加密填充符识别（一般为&#x3D;号）● bit：3 * 8变4 * 6● 输入参数会被移位拼接，移位位数为 2、4、6位，将3字节拆成4字节● 理解编码原理，编码时通常都会用3个字节一组来处理比特位数据，这些特征都可以用来分析识别。常规魔改：编码表（TLS、SMC等各种反调试位置） 对base64的编码实现：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081//定义...</div></div></div></a><a class="pagination-related" href="/2026/07/01/SMC/" title="SMC"><img class="cover" src="/img/20260702160038_24_130.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-01</div><div class="info-item-2">SMC</div></div><div class="info-2"><div class="info-item-1">SMC混淆SMC混淆是一种自修改代码技术，通过在程序运行时动态解密加密的代码段，防止静态分析和逆向工程。 123456IF .运行条件满足  CALL DecryptProc （Address of MyProc）;对某个函数代码解密  ........  CALL MyProc                           ;调用这个函数  ........  CALL EncryptProc （Address of MyProc）;再对代码进行加密，防止程序被Dump SMC混淆原理：SMC最直接的方式是通过修改PE文件的数据段和代码段来进行混淆，或者通过修改PE文件的Section Header,搭配使用API Hook实现代码加密和解密，同时会在加密过程中使用VMProtect等第三方加密工具。因此在SMC中存在标志函数：VirtualProtect（），并且SMC中还会出现代码爆红现象，跟踪到汇编代码就能看到爆红部分是大片的数据，如下图所示。 反混淆方式大多数题目在代码中都是能够找到SMC加密逻辑的，只不过有的可能在反编译的时候就能看到，有的只能在汇编看到。只要能...</div></div></div></a><a class="pagination-related" href="/2026/06/29/Maze_Game/" title="Maze Game"><img class="cover" src="/img/20260629103801_18_130.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-29</div><div class="info-item-2">Maze Game</div></div><div class="info-2"><div class="info-item-1">迷宫问题逆向迷宫问题：我们能见到在CTF逆向中有这样一类题：给你一个迷宫地图，告诉你移动方向按键和起点终点，大多flag是根据迷宫地图，利用DFS或者BFS得到的路径结果，进行各种加密视为最终flag结果。在遇到迷宫题目时，我们首先就要考虑找三大要素：1.迷宫地图2.移动方向按键3.起点终点规则 在我们遇到的迷宫题目中，大多采取二维数组的形式表示迷宫，当然难一点的也有三维的迷宫，包括无地图路径搜索。这里给大家提供一个解决二维迷宫的万能脚本，三位迷宫DFS,BFS解题脚本，只要把脚本中的迷宫替换即可得到路径答案： 1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253from collections import deque #设置二维四向迷宫, 如果题目是多个小迷宫问题, 拆分多次调用脚本获取路径即可maze = 二维列表迷宫path_len = 0x7fffffff#如果题目未给出终点坐标，则一定会指定路径的长度，在此处修改路径长度，否则请...</div></div></div></a><a class="pagination-related" href="/2026/06/07/shellcode/" title="shellcode逆向"><img class="cover" src="/img/20210426110332_bab78.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-07</div><div class="info-item-2">shellcode逆向</div></div><div class="info-2"><div class="info-item-1">Shellcode什么是shellcode呢？shell不是终端命令吗？^^ Shellcode逆向篇shellcode的自我介绍形似二进制数据但能利用程序原有漏洞发出恶意攻击的东西shellcode看着是一段二进制数据，实则是一个能在特定环境下生存或者执行的代码胶囊。最初shellcode的功能是打开终端命令行，现在我们还可以利用shellcode实现某些攻击，比如添加用户、反向连接、下载执行等。 一个能够工作的shellcode长这样，当然，仅仅有这部分二进制数据是达不到攻击效果的，还需要结合别的过程 这是从某个题里面抠出来的shellcode部分数据，但是记不得是哪个题了，看一下长什么样就好了 1234567891011121314unsigned char shellcode[] = &quot;\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30&quot;&quot;\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff&quot;&q...</div></div></div></a><a class="pagination-related" href="/2026/06/21/flower/" title="A Beautiful Flower"><img class="cover" src="/img/260621203457_8_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-21</div><div class="info-item-2">A Beautiful Flower</div></div><div class="info-2"><div class="info-item-1">逆向花指令花指令：既在代码中添加永恒跳转的指令，或者垃圾数据目的是干扰ida等软件对程序的静态分析。使这些软件无法正常反汇编出原始代码。花指令的实现方式:核心在于制造反汇编歧义常见手法包括：1）无效跳转和垃圾字节；2）利用反汇编线性扫描缺陷；3）修改返回地址；4）多态变形 俗话说，知己知彼，百战不殆。花指令为了干扰软件的静态分析，当然就要了解ida常用的反汇编算法，这样才能想办法绕过检测。 ida常用的反汇编算法：1.线性扫描算法：逐行反汇编（无法将数据和内容进行区分）2.递归行进算法：按照代码可能的执行顺序进行反汇编程序 在程序中会执行的花指令可执行花指令指的是花指令代码在程序的正常执行过程中会被执行，但执行这些代码没有任何意义，执行前后不改变任何寄存器的值，同时这部分代码也会被反汇编器正常识别 压栈后恢复栈地址通过压栈和修改栈指针来干扰反汇编器，但实际执行时会恢复栈指针，使得代码能正常执行。通常用于制造反汇编错误，使得静态分析工具无法正确识别指令边界，隐藏真实的代码逻辑。常见：在汇编语言中push是入栈，pop是出栈使用push指令将一些数据（可能是垃圾数据或有用数据）压入栈...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学那个名叫逆向的魔法，咒语是花指令，SMC......</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新，请大佬们多多指教Orz!</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A3%B3"><span class="toc-number">1.</span> <span class="toc-text">壳</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%8B%E7%BC%A9%E5%A3%B3"><span class="toc-number">1.1.</span> <span class="toc-text">压缩壳</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%8B%E7%BC%A9%E5%A3%B3%E6%97%A9%E5%9C%A8-DOS-%E6%97%B6%E4%BB%A3%E5%B0%B1%E5%B7%B2%E7%BB%8F%E5%87%BA%E7%8E%B0%EF%BC%8C%E5%8E%8B%E7%BC%A9%E5%A3%B3%E5%8F%AF%E4%BB%A5%E5%B8%AE%E5%8A%A9%E7%BC%A9%E5%87%8F-PE-%E6%96%87%E4%BB%B6%E7%9A%84%E5%A4%A7%E5%B0%8F%EF%BC%8C%E9%9A%90%E8%97%8FPE%E6%96%87%E4%BB%B6%E5%86%85%E9%83%A8%E4%BB%A3%E7%A0%81%E5%92%8C%E8%B5%84%E6%BA%90%EF%BC%8C%E4%BE%BF%E4%BA%8E%E4%BC%A0%E8%BE%93%E5%92%8C%E4%BF%9D%E5%AD%98%E3%80%82%E5%8E%8B%E7%BC%A9%E5%A3%B3%E4%B8%80%E7%A7%8D%E7%94%A8%E4%BA%8E%E5%8D%95%E7%BA%AF%E7%9A%84%E5%8E%8B%E7%BC%A9%E6%99%AE%E9%80%9APE%E6%96%87%E4%BB%B6%EF%BC%8C%E5%8F%A6%E4%B8%80%E7%A7%8D%E5%88%99%E4%BC%9A%E5%AF%B9%E6%96%87%E4%BB%B6%E9%80%A0%E6%88%90%E8%BE%83%E5%A4%A7%E7%9A%84%E6%94%B9%E5%8F%98%EF%BC%8C%E4%B8%A5%E9%87%8D%E7%A0%B4%E5%9D%8FPE%E6%96%87%E4%BB%B6%E5%A4%B4%EF%BC%8C%E7%94%A8%E4%BA%8E%E5%8E%8B%E7%BC%A9%E6%81%B6%E6%84%8F%E7%A8%8B%E5%BA%8F%E3%80%82%E5%B8%B8%E8%A7%81%E7%9A%84%E5%8E%8B%E7%BC%A9%E5%A3%B3%E6%9C%89%EF%BC%9AUpx%E3%80%81ASpack%E3%80%81PECompat"><span class="toc-number">1.2.</span> <span class="toc-text">压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A0%E5%AF%86%E5%A3%B3"><span class="toc-number">1.3.</span> <span class="toc-text">加密壳</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E5%8A%A0%E5%AF%86%E5%A3%B3%E6%9C%89%EF%BC%9AASProtector%E3%80%81Armadillo%E3%80%81EXECryptor%E3%80%81Themida%E3%80%81VMProtect"><span class="toc-number">1.4.</span> <span class="toc-text">常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A3%B3%E5%8A%A0%E8%BD%BD%E7%9A%84%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="toc-number">1.5.</span> <span class="toc-text">壳加载的过程：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%9D%E5%AD%98%E5%85%A5%E5%8F%A3%E5%8F%82%E6%95%B0%EF%BC%9A%E4%BF%9D%E6%8C%81%E6%A0%88%E5%B9%B3%E8%A1%A1%EF%BC%8C%E5%A3%B3%E8%BF%90%E8%A1%8C%E5%89%8D%E5%90%8E%E8%A6%81%E4%BF%9D%E6%8C%81%E5%AF%84%E5%AD%98%E5%99%A8%E5%80%BC%E4%B8%8D%E5%8F%98"><span class="toc-number">1.6.</span> <span class="toc-text">保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96%E7%A8%8B%E5%BA%8FAPI%EF%BC%9A"><span class="toc-number">1.7.</span> <span class="toc-text">获取程序API：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%AF%86%E5%90%84%E5%8C%BA%E5%9D%97%E6%95%B0%E6%8D%AE"><span class="toc-number">1.8.</span> <span class="toc-text">解密各区块数据 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B7%B3%E8%BD%AC%E5%9B%9E%E5%8E%9F%E7%A8%8B%E5%BA%8F%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="toc-number">1.9.</span> <span class="toc-text">跳转回原程序入口点 </span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#UPX%E5%A3%B3"><span class="toc-number">2.</span> <span class="toc-text">UPX壳</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A0%E8%BD%BD%E5%8E%9F%E7%90%86%EF%BC%9A%E5%8E%8B%E7%BC%A9%E5%8C%BA%E6%AE%B5-%E8%BF%90%E8%A1%8C%E6%97%B6%E8%A7%A3%E5%8E%8B"><span class="toc-number">2.1.</span> <span class="toc-text">加载原理：压缩区段 + 运行时解压</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AA%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8C%BA%E6%AE%B5%E7%8A%B6%E6%80%81%EF%BC%9A"><span class="toc-number">2.2.</span> <span class="toc-text">未运行时区段状态：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%86%85%E5%AD%98%E5%8A%A8%E6%80%81%E5%8F%98%E5%8C%96"><span class="toc-number">2.3.</span> <span class="toc-text">运行时内存动态变化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">2.4.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OEP%E5%AF%BB%E6%89%BE"><span class="toc-number">3.</span> <span class="toc-text">OEP寻找</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E5%88%86%E6%9E%90OEP%E7%9A%84%E7%89%B9%E5%BE%81%E7%A0%81%E5%92%8CAPI"><span class="toc-number">3.1.</span> <span class="toc-text">通过分析OEP的特征码和API</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B9%E6%B3%95"><span class="toc-number">3.2.</span> <span class="toc-text">方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E7%9B%AE%E6%A0%87%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%BC%96%E8%AF%91%E7%89%B9%E7%82%B9"><span class="toc-number">3.2.1.</span> <span class="toc-text">寻找目标进程的编译特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8API%E5%AE%9A%E4%BD%8D%E5%88%B0OEP%E9%99%84%E8%BF%91"><span class="toc-number">3.2.2.</span> <span class="toc-text">使用API定位到OEP附近</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B9%E6%8D%AE%E5%A0%86%E6%A0%88%E5%B9%B3%E8%A1%A1%E5%AE%9A%E4%BD%8DOEP"><span class="toc-number">3.2.3.</span> <span class="toc-text">根据堆栈平衡定位OEP</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">3.2.3.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%A5%E5%8F%A3%E7%89%B9%E5%BE%81%E6%80%BB%E7%BB%93"><span class="toc-number">3.2.3.2.</span> <span class="toc-text">入口特征总结</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%84%B1%E5%A3%B3%E6%96%B9%E6%B3%95"><span class="toc-number">4.</span> <span class="toc-text">脱壳方法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95%E6%AD%A5%E8%B7%9F%E8%B8%AA%E6%B3%95-%E2%80%93-%E4%B8%87%E8%83%BD%E4%BD%86%E6%98%AF%E5%B7%A5%E4%BD%9C%E9%87%8F%E5%B7%A8%E5%A4%A7"><span class="toc-number">4.1.</span> <span class="toc-text">单步跟踪法 – 万能但是工作量巨大</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E6%93%8D%E4%BD%9C%EF%BC%9A"><span class="toc-number">4.1.1.</span> <span class="toc-text">具体操作：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">4.1.2.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ESP%E5%AE%9A%E5%BE%8B-%E2%80%93-%E5%A0%86%E6%A0%88%E5%B9%B3%E8%A1%A1%E5%AE%9A%E5%BE%8B"><span class="toc-number">4.2.</span> <span class="toc-text">ESP定律 – 堆栈平衡定律</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86-1"><span class="toc-number">4.2.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E6%93%8D%E4%BD%9C%EF%BC%9A-1"><span class="toc-number">4.2.2.</span> <span class="toc-text">具体操作：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">4.3.</span> <span class="toc-text">注意事项</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-1"><span class="toc-number">4.4.</span> <span class="toc-text">示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E9%95%9C%E5%83%8F%E6%B3%95"><span class="toc-number">4.5.</span> <span class="toc-text">内存镜像法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AD%A4%E5%A4%84%E8%A7%A3%E7%AD%94%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%AF%B9TEXT%E5%92%8CRSRC%E4%B8%A4%E6%AE%B5%E4%B8%8B%E6%96%AD%E7%82%B9%EF%BC%9F"><span class="toc-number">4.6.</span> <span class="toc-text">此处解答为什么要对TEXT和RSRC两段下断点？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="toc-number">4.6.1.</span> <span class="toc-text">重要步骤：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B-2"><span class="toc-number">4.6.2.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%84%B1%E5%A3%B3%E4%B9%8B%E5%90%8E"><span class="toc-number">4.7.</span> <span class="toc-text">脱壳之后</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%AD%A3%E7%A1%AE%E4%BF%AE%E5%A4%8D%EF%BC%9F"><span class="toc-number">4.7.1.</span> <span class="toc-text">如何正确修复？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-ImportREC"><span class="toc-number">4.8.</span> <span class="toc-text">使用 ImportREC</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A5%E4%BE%8B%E9%A2%98-%E9%9D%92%E5%B0%91%E5%B9%B4CTF-Debug-%E4%BB%8B%E7%BB%8D%E7%94%A8x64dbg%E6%89%8B%E8%84%B1upx%E5%A3%B3"><span class="toc-number">5.</span> <span class="toc-text">以例题 青少年CTF Debug 介绍用x64dbg手脱upx壳</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/07/04/UPX%E8%84%B1%E5%A3%B3/" title="UPX脱壳"><img src="/img/20260704173342_3_109.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="UPX脱壳"/></a><div class="content"><a class="title" href="/2026/07/04/UPX%E8%84%B1%E5%A3%B3/" title="UPX脱壳">UPX脱壳</a><time datetime="2026-07-04T09:31:04.000Z" title="发表于 2026-07-04 17:31:04">2026-07-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/01/SMC/" title="SMC"><img src="/img/20260702160038_24_130.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="SMC"/></a><div class="content"><a class="title" href="/2026/07/01/SMC/" title="SMC">SMC</a><time datetime="2026-07-01T12:06:27.000Z" title="发表于 2026-07-01 20:06:27">2026-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/29/Maze_Game/" title="Maze Game"><img src="/img/20260629103801_18_130.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="Maze Game"/></a><div class="content"><a class="title" href="/2026/06/29/Maze_Game/" title="Maze Game">Maze Game</a><time datetime="2026-06-29T02:31:28.000Z" title="发表于 2026-06-29 10:31:28">2026-06-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/21/flower/" title="A Beautiful Flower"><img src="/img/260621203457_8_6.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="A Beautiful Flower"/></a><div class="content"><a class="title" href="/2026/06/21/flower/" title="A Beautiful Flower">A Beautiful Flower</a><time datetime="2026-06-21T12:29:31.000Z" title="发表于 2026-06-21 20:29:31">2026-06-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/07/shellcode/" title="shellcode逆向"><img src="/img/20210426110332_bab78.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="shellcode逆向"/></a><div class="content"><a class="title" href="/2026/06/07/shellcode/" title="shellcode逆向">shellcode逆向</a><time datetime="2026-06-07T12:37:44.000Z" title="发表于 2026-06-07 20:37:44">2026-06-07</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
