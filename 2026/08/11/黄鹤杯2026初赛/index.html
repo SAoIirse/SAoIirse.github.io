@@ -1,0 +1,242 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>黄鹤杯2026初赛 - RE.WP | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Is í Saoirse a hainm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="黄鹤杯2026初赛 - RE.WP">
+<meta property="og:url" content="https://saoirse.github.io/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="Is í Saoirse a hainm">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/CTFnixiang.jpg">
+<meta property="article:published_time" content="2026-08-11T00:10:21.000Z">
+<meta property="article:modified_time" content="2026-08-11T00:12:00.674Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="WP">
+<meta property="article:tag" content="逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/CTFnixiang.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "黄鹤杯2026初赛 - RE.WP",
+  "url": "https://saoirse.github.io/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/",
+  "image": "https://saoirse.github.io/img/CTFnixiang.jpg",
+  "datePublished": "2026-08-11T00:10:21.000Z",
+  "dateModified": "2026-08-11T00:12:00.674Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '黄鹤杯2026初赛 - RE.WP',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/indexback.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">黄鹤杯2026初赛 - RE.WP</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">黄鹤杯2026初赛 - RE.WP</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-11T00:10:21.000Z" title="发表于 2026-08-11 08:10:21">2026-08-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-11T00:12:00.674Z" title="更新于 2026-08-11 08:12:00">2026-08-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%AF%94%E8%B5%9BWP%E5%90%88%E9%9B%86/">比赛WP合集</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/">https://saoirse.github.io/2026/08/11/黄鹤杯2026初赛/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CTF/">CTF</a><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91/">逆向</a><a class="post-meta__tags" href="/tags/WP/">WP</a></div><div class="post-share"><div class="social-share" data-image="/img/CTFnixiang.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/08/07/Unicorn%E6%A8%A1%E6%8B%9F%E5%9E%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" title="Unicorn模拟型虚拟机"><img class="cover" src="/img/20260806220242_10_21.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Unicorn模拟型虚拟机</div></div><div class="info-2"><div class="info-item-1">在逆向工程领域，“虚拟机”这个概念远不止我们常说的VMware或VirtualBox，它涵盖了从硬件模拟到软件抽象等多个层面，因此涉及的“架构”类型也极其丰富。那么之后我们慢慢学习更多架构的虚拟机类型，体系更新请关注tag:VM逆向。 Unicorn模拟器框架Unicorn是一个轻量级，跨平台CPU模拟器框架。主要面向动态分析、漏洞挖掘和逆向工程等领域。其核心的定位是专注于CPU指令层面的模拟 原理模拟器架构基础Unicorn 基于动态二进制翻译（DBT）技术构建。它将不同架构的机器码指令动态地翻译为宿主平台能够理解和执行的指令序列。 内存管理与模拟Unicorn 对内存可以模拟不同的内存区域，包括代码段、数据段、堆栈等。通过分配虚拟内存空间，Unicorn 允许用户将二进制文件加载到模拟的内存中，就像在真实的硬件环境中一样。在模拟内存访问时，它会根据内存权限进行检查，确保模拟的程序按照预期的方式访问内存。 Unicorn 的优点无需启动完整系统，直接加载二进制代码就能模拟，适合快速验证漏洞。便于多种语言之间的转化，支持再模拟过程中随时中断，可以修改寄存器等，便于调试加密算法，脱...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/06/07/shellcode/" title="shellcode逆向"><img class="cover" src="/img/20210426110332_bab78.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-07</div><div class="info-item-2">shellcode逆向</div></div><div class="info-2"><div class="info-item-1">Shellcode什么是shellcode呢？shell不是终端命令吗？^^ Shellcode逆向篇shellcode的自我介绍形似二进制数据但能利用程序原有漏洞发出恶意攻击的东西shellcode看着是一段二进制数据，实则是一个能在特定环境下生存或者执行的代码胶囊。最初shellcode的功能是打开终端命令行，现在我们还可以利用shellcode实现某些攻击，比如添加用户、反向连接、下载执行等。 一个能够工作的shellcode长这样，当然，仅仅有这部分二进制数据是达不到攻击效果的，还需要结合别的过程 这是从某个题里面抠出来的shellcode部分数据，但是记不得是哪个题了，看一下长什么样就好了 1234567891011121314unsigned char shellcode[] = &quot;\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30&quot;&quot;\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff&quot;&q...</div></div></div></a><a class="pagination-related" href="/2026/07/01/SMC/" title="SMC"><img class="cover" src="/img/20260702160038_24_130.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-01</div><div class="info-item-2">SMC</div></div><div class="info-2"><div class="info-item-1">SMC混淆SMC混淆是一种自修改代码技术，通过在程序运行时动态解密加密的代码段，防止静态分析和逆向工程。 123456IF .运行条件满足  CALL DecryptProc （Address of MyProc）;对某个函数代码解密  ........  CALL MyProc                           ;调用这个函数  ........  CALL EncryptProc （Address of MyProc）;再对代码进行加密，防止程序被Dump SMC混淆原理：SMC最直接的方式是通过修改PE文件的数据段和代码段来进行混淆，或者通过修改PE文件的Section Header,搭配使用API Hook实现代码加密和解密，同时会在加密过程中使用VMProtect等第三方加密工具。因此在SMC中存在标志函数：VirtualProtect（），并且SMC中还会出现代码爆红现象，跟踪到汇编代码就能看到爆红部分是大片的数据，如下图所示。 反混淆方式大多数题目在代码中都是能够找到SMC加密逻辑的，只不过有的可能在反编译的时候就能看到，有的只能在汇编看到。只要能...</div></div></div></a><a class="pagination-related" href="/2026/06/21/flower/" title="A Beautiful Flower"><img class="cover" src="/img/260621203457_8_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-21</div><div class="info-item-2">A Beautiful Flower</div></div><div class="info-2"><div class="info-item-1">逆向花指令花指令：既在代码中添加永恒跳转的指令，或者垃圾数据目的是干扰ida等软件对程序的静态分析。使这些软件无法正常反汇编出原始代码。花指令的实现方式:核心在于制造反汇编歧义常见手法包括：1）无效跳转和垃圾字节；2）利用反汇编线性扫描缺陷；3）修改返回地址；4）多态变形 俗话说，知己知彼，百战不殆。花指令为了干扰软件的静态分析，当然就要了解ida常用的反汇编算法，这样才能想办法绕过检测。 ida常用的反汇编算法：1.线性扫描算法：逐行反汇编（无法将数据和内容进行区分）2.递归行进算法：按照代码可能的执行顺序进行反汇编程序 在程序中会执行的花指令可执行花指令指的是花指令代码在程序的正常执行过程中会被执行，但执行这些代码没有任何意义，执行前后不改变任何寄存器的值，同时这部分代码也会被反汇编器正常识别 压栈后恢复栈地址通过压栈和修改栈指针来干扰反汇编器，但实际执行时会恢复栈指针，使得代码能正常执行。通常用于制造反汇编错误，使得静态分析工具无法正确识别指令边界，隐藏真实的代码逻辑。常见：在汇编语言中push是入栈，pop是出栈使用push指令将一些数据（可能是垃圾数据或有用数据）压入栈...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img class="cover" src="/img/CTFnixiang.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">加密算法</div></div><div class="info-2"><div class="info-item-1">正好赶上复习，那我们一起重走来时路吧~  加密算法篇BASE家族base64base64加密原理：base64加密本质是一种编码形式，数据以一种二进制文本的形式传递，编码过程分为三步1.将ASCII转换为对应的八位二进制数据2.合并起来，再以6位一组重新分配3.六位值映射到base64字符表位数不足时，在末尾补0，直至补齐组内位数 特征识别：● 字符串编码表识别● 加密填充符识别（一般为&#x3D;号）● bit：3 * 8变4 * 6● 输入参数会被移位拼接，移位位数为 2、4、6位，将3字节拆成4字节● 理解编码原理，编码时通常都会用3个字节一组来处理比特位数据，这些特征都可以用来分析识别。常规魔改：编码表（TLS、SMC等各种反调试位置） 对base64的编码实现：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081//定义...</div></div></div></a><a class="pagination-related" href="/2026/07/05/%E5%8F%8D%E8%B0%83%E8%AF%95%E7%BB%95%E8%BF%87/" title="反调试绕过"><img class="cover" src="/img/20260705174257_7_109.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-05</div><div class="info-item-2">反调试绕过</div></div><div class="info-2"><div class="info-item-1">反调试是什么？很坏了，主要是干扰动态。一个花指令，干扰静态，一个反调试干扰动态，统统拱出去！！！ 反调试技术是指通过各种手段和算法，阻止恶意攻击者使用调试器对软件进行分析、修改和破解的技术手段。反调试技术旨在提高软件的安全性和稳定性，避免被恶意攻击者识别漏洞和加密算法，从而保护软件的知识产权和用户数据不受侵害。 主要呢，是使用Windows API实现使用Windows API函数检测调试器是否存在是最简单的反调试技术。Windows操作系统中提供了这样一些API，应用程序可以通过调用这些API，来检测自己是否正在被调试。这些API中有些是专门用来检测调试器的存在的，而另外一些API是出于其他目的而设计的，但也可以被改造用来探测调试器的存在。其中很小部分API函数没有在微软官方文档显示。通常，防止恶意代码使用API进行反调试的最简单的办法是在恶意代码运行期间修改恶意代码，使其不能调用探测调试器的API函数，或者修改这些API函数的返回值，确保恶意代码执行合适的路径。与这些方法相比，较复杂的做法是挂钩这些函数，如使用rootkit技术。 反调试工作原理反调试技术的原理主要包括：● ...</div></div></div></a><a class="pagination-related" href="/2026/07/04/UPX%E8%84%B1%E5%A3%B3/" title="UPX脱壳"><img class="cover" src="/img/20260704173342_3_109.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-04</div><div class="info-item-2">UPX脱壳</div></div><div class="info-2"><div class="info-item-1">壳什么是壳呢？壳大多分为两类：压缩壳和加密壳。 压缩壳压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat加密壳加密壳也称保护壳，应用有多种防止代码逆向分析的技术，主要的功能是保护 PE 免受代码逆向分析。加密壳保护的 PE 程序通常比原文件大得多。目前加密壳大量用于对安全性要求高，对破解敏感的应用程序，同时也有恶意程序用于避免（降低）杀毒软件的检测查杀。 常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect壳加载的过程：保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变获取程序API： 一般壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这几个 API 函数 如果需要其他 API 函数，则通过 LoadLibraryA(W) 或...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学那个名叫逆向的魔法，咒语是花指令，SMC......</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新，请大佬们多多指教Orz!</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/" title="黄鹤杯2026初赛 - RE.WP"><img src="/img/CTFnixiang.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="黄鹤杯2026初赛 - RE.WP"/></a><div class="content"><a class="title" href="/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/" title="黄鹤杯2026初赛 - RE.WP">黄鹤杯2026初赛 - RE.WP</a><time datetime="2026-08-11T00:10:21.000Z" title="发表于 2026-08-11 08:10:21">2026-08-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/07/Unicorn%E6%A8%A1%E6%8B%9F%E5%9E%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" title="Unicorn模拟型虚拟机"><img src="/img/20260806220242_10_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="Unicorn模拟型虚拟机"/></a><div class="content"><a class="title" href="/2026/08/07/Unicorn%E6%A8%A1%E6%8B%9F%E5%9E%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" title="Unicorn模拟型虚拟机">Unicorn模拟型虚拟机</a><time datetime="2026-08-07T00:47:50.000Z" title="发表于 2026-08-07 08:47:50">2026-08-07</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/21/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级"><img src="/img/20260806220242_10_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="VM虚拟机逆向--青铜级"/></a><div class="content"><a class="title" href="/2026/07/21/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级">VM虚拟机逆向--青铜级</a><time datetime="2026-07-21T11:27:54.000Z" title="发表于 2026-07-21 19:27:54">2026-07-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/21/%E7%AC%A6%E5%8F%B7%E6%89%A7%E8%A1%8C/" title="符号执行"><img src="/img/default_cover.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="符号执行"/></a><div class="content"><a class="title" href="/2026/07/21/%E7%AC%A6%E5%8F%B7%E6%89%A7%E8%A1%8C/" title="符号执行">符号执行</a><time datetime="2026-07-21T06:36:13.000Z" title="发表于 2026-07-21 14:36:13">2026-07-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/10/%E4%B8%87%E8%83%BD%E9%92%A5%E5%8C%99%E7%AF%87/" title="万能钥匙篇"><img src="/img/category_img.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="万能钥匙篇"/></a><div class="content"><a class="title" href="/2026/07/10/%E4%B8%87%E8%83%BD%E9%92%A5%E5%8C%99%E7%AF%87/" title="万能钥匙篇">万能钥匙篇</a><time datetime="2026-07-10T03:01:57.000Z" title="发表于 2026-07-10 11:01:57">2026-07-10</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
