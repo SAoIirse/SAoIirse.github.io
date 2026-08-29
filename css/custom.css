@@ -1,15 +1,15 @@
 /* ============================================
-   🧙 哈利波特魔法风格 - 半透明背景 + 纯白字体
+   🧙 哈利波特魔法风格 - 边框明显 + 半透明浅色背景
    仅思考框 + 表格，不修改文章内容框
    ============================================ */
 
 /* ---------- 1. 基础魔法框 ---------- */
 .magic-box {
-  border: 3px solid rgba(255, 215, 0, 0.5);
+  border: 3px solid rgba(255, 215, 0, 0.8);
   border-radius: 20px;
-  background: rgba(20, 10, 35, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(60, 40, 100, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   padding: 32px 36px;
   margin: 32px 0;
   color: #ffffff;
@@ -17,10 +17,10 @@
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 0 40px rgba(138, 43, 226, 0.15),
+    0 0 40px rgba(255, 215, 0, 0.08),
     0 0 80px rgba(255, 215, 0, 0.04),
-    inset 0 0 60px rgba(138, 43, 226, 0.05),
-    0 8px 32px rgba(0, 0, 0, 0.3);
+    inset 0 0 60px rgba(180, 100, 255, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.25);
   transition: all 0.6s ease;
 }
 
@@ -55,7 +55,7 @@
   right: 18px;
   font-size: 16px;
   letter-spacing: 4px;
-  color: rgba(255, 215, 0, 0.2);
+  color: rgba(255, 215, 0, 0.25);
   pointer-events: none;
   z-index: 1;
   font-family: 'Georgia', serif;
@@ -163,7 +163,7 @@
 .magic-box hr {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), rgba(180, 100, 255, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), rgba(180, 100, 255, 0.2), transparent);
   margin: 24px 0;
   position: relative;
 }
@@ -173,7 +173,7 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  color: rgba(255, 215, 0, 0.2);
+  color: rgba(255, 215, 0, 0.25);
   background: transparent;
   padding: 0 12px;
 }
@@ -190,7 +190,7 @@
   margin: 16px 0;
   font-size: 0.9em;
   border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 .magic-box table thead,
 .magic-box table tbody,
@@ -248,10 +248,10 @@
 /* ---------- 2. 魔杖光效（悬停发光） ---------- */
 .magic-box:hover {
   box-shadow: 
-    0 0 60px rgba(138, 43, 226, 0.2),
+    0 0 60px rgba(255, 215, 0, 0.12),
     0 0 120px rgba(255, 215, 0, 0.06),
-    inset 0 0 60px rgba(138, 43, 226, 0.08);
-  border-color: rgba(255, 215, 0, 0.7);
+    inset 0 0 60px rgba(180, 100, 255, 0.06);
+  border-color: rgba(255, 215, 0, 0.9);
 }
 
 /* ---------- 3. 星星闪烁动画 ---------- */
@@ -284,11 +284,11 @@
   color: rgba(255, 255, 255, 0.3);
   font-family: 'Georgia', serif;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.08);
   padding: 4px 16px;
   border-radius: 30px;
   margin-top: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 215, 0, 0.03);
 }
 
 /* ---------- 6. 浮动动画 ---------- */
@@ -301,12 +301,12 @@
   animation: floatText 3s ease-in-out infinite;
 }
 
-/* ---------- 7. 四大学院配色（半透明版） ---------- */
+/* ---------- 7. 四大学院配色 ---------- */
 .magic-box-gryffindor {
-  border-color: rgba(255, 215, 0, 0.5);
-  background: rgba(40, 12, 12, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255, 215, 0, 0.8);
+  background: rgba(80, 30, 30, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .magic-box-gryffindor::after {
   content: '🦁 ✦ 🧙';
@@ -323,10 +323,10 @@
 }
 
 .magic-box-slytherin {
-  border-color: rgba(200, 200, 200, 0.4);
-  background: rgba(12, 28, 18, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(200, 200, 200, 0.7);
+  background: rgba(30, 70, 40, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .magic-box-slytherin::after {
   content: '🐍 ✦ 🧙';
@@ -343,10 +343,10 @@
 }
 
 .magic-box-ravenclaw {
-  border-color: rgba(148, 107, 45, 0.5);
-  background: rgba(14, 22, 45, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(180, 140, 70, 0.8);
+  background: rgba(30, 40, 80, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .magic-box-ravenclaw::after {
   content: '🦅 ✦ 🧙';
@@ -358,15 +358,15 @@
   border-left-color: #c8995a;
 }
 .magic-box-ravenclaw .magic-seal {
-  border-color: rgba(148, 107, 45, 0.08);
-  color: rgba(148, 107, 45, 0.25);
+  border-color: rgba(180, 140, 70, 0.08);
+  color: rgba(180, 140, 70, 0.25);
 }
 
 .magic-box-hufflepuff {
-  border-color: rgba(236, 185, 57, 0.5);
-  background: rgba(30, 22, 10, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(236, 185, 57, 0.8);
+  background: rgba(70, 55, 25, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .magic-box-hufflepuff::after {
   content: '🦡 ✦ 🧙';
@@ -384,11 +384,11 @@
 
 /* ---------- 8. 深色模式适配 ---------- */
 [data-theme="dark"] .magic-box {
-  border-color: rgba(255, 215, 0, 0.4);
-  background: rgba(12, 6, 25, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
+  border-color: rgba(255, 215, 0, 0.8);
+  background: rgba(40, 25, 70, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.06);
 }
 [data-theme="dark"] .magic-box::before {
   background-image: 
@@ -400,14 +400,14 @@
     radial-gradient(2px 2px at 20% 85%, rgba(180, 230, 255, 0.6), transparent);
 }
 [data-theme="dark"] .magic-box-gryffindor {
-  background: rgba(30, 8, 8, 0.8);
+  background: rgba(60, 20, 20, 0.5);
 }
 [data-theme="dark"] .magic-box-slytherin {
-  background: rgba(8, 20, 12, 0.8);
+  background: rgba(20, 55, 30, 0.5);
 }
 [data-theme="dark"] .magic-box-ravenclaw {
-  background: rgba(10, 16, 35, 0.8);
+  background: rgba(20, 30, 65, 0.5);
 }
 [data-theme="dark"] .magic-box-hufflepuff {
-  background: rgba(22, 16, 8, 0.8);
+  background: rgba(55, 40, 15, 0.5);
 }
