@@ -369,13 +369,13 @@
 [data-theme="dark"] .magic-box {
   border-color: rgba(255, 215, 0, 0.2);
   background: linear-gradient(145deg, #0a0515, #1a0a3a, #0a0515);
-  box-shadow: 0 0 40px rgba(138, 43, 226, 0.2);
+  box-shadow: 0 0 40px rgba(192, 163, 219, 0.2);
 }
 [data-theme="dark"] .magic-box::before {
   background-image: 
     radial-gradient(2px 2px at 10% 20%, rgba(255, 215, 0, 0.6), transparent),
-    radial-gradient(2px 2px at 30% 60%, rgba(255, 100, 200, 0.5), transparent),
-    radial-gradient(1px 1px at 50% 15%, rgba(0, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 30% 60%, rgba(235, 162, 209, 0.5), transparent),
+    radial-gradient(1px 1px at 50% 15%, rgba(182, 242, 242, 0.6), transparent),
     radial-gradient(2px 2px at 70% 45%, rgba(255, 215, 0, 0.5), transparent),
     radial-gradient(1px 1px at 85% 75%, rgba(255, 100, 200, 0.5), transparent),
     radial-gradient(2px 2px at 20% 85%, rgba(0, 255, 255, 0.5), transparent);
