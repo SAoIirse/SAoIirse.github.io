@@ -1,5 +1,5 @@
 /* ============================================
-   🧙 哈利波特魔法风格 - 浅色明亮版
+   🧙 哈利波特魔法风格 - 半透明背景 + 纯白字体
    仅思考框 + 表格，不修改文章内容框
    ============================================ */
 
@@ -7,10 +7,12 @@
 .magic-box {
   border: 3px solid rgba(255, 215, 0, 0.5);
   border-radius: 20px;
-  background: linear-gradient(145deg, #2a1a3e, #4a2a7a, #2a1a3e);
+  background: rgba(20, 10, 35, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 32px 36px;
   margin: 32px 0;
-  color: #f5f0f5;
+  color: #ffffff;
   font-family: 'Georgia', 'Times New Roman', serif;
   position: relative;
   overflow: hidden;
@@ -65,21 +67,26 @@
   z-index: 2;
 }
 
-/* ---------- 标题 ---------- */
+/* ---------- 标题（纯白） ---------- */
 .magic-box h1, .magic-box h2, .magic-box h3, .magic-box h4 {
-  color: #f8f0f8;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 1px;
-  text-shadow: 0 0 30px rgba(180, 100, 255, 0.15);
+  text-shadow: 0 0 30px rgba(180, 100, 255, 0.1);
   margin-top: 0;
   font-family: 'Georgia', serif;
+}
+
+/* ---------- 正文段落（纯白） ---------- */
+.magic-box p {
+  color: #ffffff;
 }
 
 /* ---------- 强调文字（金色） ---------- */
 .magic-box strong, .magic-box b {
   color: #ffd700;
   font-weight: 700;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.15), 0 0 60px rgba(255, 215, 0, 0.05);
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
 }
 
 /* ---------- 链接 ---------- */
@@ -104,11 +111,12 @@
   margin: 10px 0;
   line-height: 1.8;
   padding-left: 8px;
+  color: #ffffff;
 }
 .magic-box ul li::before {
   content: '✦ ';
   color: #ffd700;
-  opacity: 0.6;
+  opacity: 0.7;
   font-size: 0.9em;
 }
 
@@ -119,6 +127,7 @@
 .magic-box ol li {
   margin: 10px 0;
   line-height: 1.8;
+  color: #ffffff;
 }
 .magic-box ol li::marker {
   color: #ffd700;
@@ -127,14 +136,14 @@
 
 /* ---------- 行内代码 ---------- */
 .magic-box code {
-  background: rgba(180, 100, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
   padding: 2px 12px;
   border-radius: 4px;
   font-size: 0.9em;
   color: #d4a0ff;
   font-weight: 600;
   font-family: 'Courier New', monospace;
-  border: 1px solid rgba(180, 100, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* ---------- 引用块 ---------- */
@@ -144,7 +153,7 @@
   border-left: 4px solid #ffd700;
   background: rgba(255, 215, 0, 0.04);
   border-radius: 0 8px 8px 0;
-  color: #d8d0d8;
+  color: #ffffff;
   font-style: italic;
   font-size: 1.05em;
   box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.02);
@@ -195,8 +204,8 @@
   padding: 10px 14px;
   text-align: left;
   vertical-align: top;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #e8dce8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #ffffff;
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
@@ -209,10 +218,10 @@
   border-bottom: 2px solid rgba(255, 215, 0, 0.15);
 }
 .magic-box table tr:hover {
-  background: rgba(255, 215, 0, 0.04);
+  background: rgba(255, 255, 255, 0.04);
 }
 .magic-box table code {
-  background: rgba(180, 100, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
   padding: 2px 8px;
   border-radius: 4px;
   color: #d4a0ff;
@@ -272,14 +281,14 @@
   display: inline-block;
   font-size: 12px;
   letter-spacing: 3px;
-  color: rgba(255, 215, 0, 0.15);
+  color: rgba(255, 255, 255, 0.3);
   font-family: 'Georgia', serif;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 215, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 4px 16px;
   border-radius: 30px;
   margin-top: 12px;
-  background: rgba(255, 215, 0, 0.02);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* ---------- 6. 浮动动画 ---------- */
@@ -292,10 +301,12 @@
   animation: floatText 3s ease-in-out infinite;
 }
 
-/* ---------- 7. 四大学院配色（浅色版） ---------- */
+/* ---------- 7. 四大学院配色（半透明版） ---------- */
 .magic-box-gryffindor {
   border-color: rgba(255, 215, 0, 0.5);
-  background: linear-gradient(145deg, #2a1010, #5a1a1a, #2a1010);
+  background: rgba(40, 12, 12, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .magic-box-gryffindor::after {
   content: '🦁 ✦ 🧙';
@@ -308,48 +319,54 @@
 }
 .magic-box-gryffindor .magic-seal {
   border-color: rgba(255, 215, 0, 0.08);
-  color: rgba(255, 215, 0, 0.2);
+  color: rgba(255, 215, 0, 0.25);
 }
 
 .magic-box-slytherin {
   border-color: rgba(200, 200, 200, 0.4);
-  background: linear-gradient(145deg, #0f1a12, #1a3a2a, #0f1a12);
+  background: rgba(12, 28, 18, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .magic-box-slytherin::after {
   content: '🐍 ✦ 🧙';
 }
 .magic-box-slytherin strong, .magic-box-slytherin b {
-  color: #bbbbbb;
+  color: #dddddd;
 }
 .magic-box-slytherin blockquote {
-  border-left-color: #bbbbbb;
+  border-left-color: #dddddd;
 }
 .magic-box-slytherin .magic-seal {
   border-color: rgba(200, 200, 200, 0.08);
-  color: rgba(200, 200, 200, 0.2);
+  color: rgba(200, 200, 200, 0.25);
 }
 
 .magic-box-ravenclaw {
   border-color: rgba(148, 107, 45, 0.5);
-  background: linear-gradient(145deg, #101a2a, #1a2a4a, #101a2a);
+  background: rgba(14, 22, 45, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .magic-box-ravenclaw::after {
   content: '🦅 ✦ 🧙';
 }
 .magic-box-ravenclaw strong, .magic-box-ravenclaw b {
-  color: #b8884a;
+  color: #c8995a;
 }
 .magic-box-ravenclaw blockquote {
-  border-left-color: #b8884a;
+  border-left-color: #c8995a;
 }
 .magic-box-ravenclaw .magic-seal {
   border-color: rgba(148, 107, 45, 0.08);
-  color: rgba(148, 107, 45, 0.2);
+  color: rgba(148, 107, 45, 0.25);
 }
 
 .magic-box-hufflepuff {
   border-color: rgba(236, 185, 57, 0.5);
-  background: linear-gradient(145deg, #1a1408, #3a2a10, #1a1408);
+  background: rgba(30, 22, 10, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .magic-box-hufflepuff::after {
   content: '🦡 ✦ 🧙';
@@ -362,13 +379,15 @@
 }
 .magic-box-hufflepuff .magic-seal {
   border-color: rgba(236, 185, 57, 0.08);
-  color: rgba(236, 185, 57, 0.2);
+  color: rgba(236, 185, 57, 0.25);
 }
 
 /* ---------- 8. 深色模式适配 ---------- */
 [data-theme="dark"] .magic-box {
   border-color: rgba(255, 215, 0, 0.4);
-  background: linear-gradient(145deg, #1a1028, #3a205a, #1a1028);
+  background: rgba(12, 6, 25, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
 }
 [data-theme="dark"] .magic-box::before {
@@ -381,14 +400,14 @@
     radial-gradient(2px 2px at 20% 85%, rgba(180, 230, 255, 0.6), transparent);
 }
 [data-theme="dark"] .magic-box-gryffindor {
-  background: linear-gradient(145deg, #1a0808, #3a1010, #1a0808);
+  background: rgba(30, 8, 8, 0.8);
 }
 [data-theme="dark"] .magic-box-slytherin {
-  background: linear-gradient(145deg, #0a100a, #142a18, #0a100a);
+  background: rgba(8, 20, 12, 0.8);
 }
 [data-theme="dark"] .magic-box-ravenclaw {
-  background: linear-gradient(145deg, #0a0f1a, #14203a, #0a0f1a);
+  background: rgba(10, 16, 35, 0.8);
 }
 [data-theme="dark"] .magic-box-hufflepuff {
-  background: linear-gradient(145deg, #140f08, #2a1f0a, #140f08);
+  background: rgba(22, 16, 8, 0.8);
 }
