@@ -1,349 +1,394 @@
+/* ============================================
+   🧙 哈利波特魔法风格 - 仅思考框 + 表格
+   不修改文章内容框背景
+   ============================================ */
 
-// ---------- 1. 基础魔法框 ----------
-.magic-box
-  border: 3px solid rgba(255, 215, 0, 0.3)
-  border-radius: 20px
-  // ===== 彩色渐变背景 =====
-  background: linear-gradient(145deg, #1a0a2e, #2d1b69, #1a0a2e)
-  padding: 32px 36px
-  margin: 32px 0
-  color: #f0e6f0
-  font-family: 'Georgia', 'Times New Roman', serif
-  position: relative
-  overflow: hidden
+/* ---------- 1. 基础魔法框 ---------- */
+.magic-box {
+  border: 3px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #1a0a2e, #2d1b69, #1a0a2e);
+  padding: 32px 36px;
+  margin: 32px 0;
+  color: #f0e6f0;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  position: relative;
+  overflow: hidden;
   box-shadow: 
     0 0 40px rgba(138, 43, 226, 0.25),
     0 0 80px rgba(255, 215, 0, 0.06),
     inset 0 0 60px rgba(138, 43, 226, 0.08),
-    0 8px 32px rgba(0, 0, 0, 0.5)
-  transition: all 0.6s ease
+    0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: all 0.6s ease;
+}
 
-  // ---------- 彩色星星背景闪烁 ----------
-  &::before
-    content: ''
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    background-image: 
-      radial-gradient(2px 2px at 10% 20%, rgba(255, 215, 0, 0.5), transparent),
-      radial-gradient(2px 2px at 30% 60%, rgba(255, 100, 200, 0.4), transparent),
-      radial-gradient(1px 1px at 50% 15%, rgba(0, 255, 255, 0.5), transparent),
-      radial-gradient(2px 2px at 70% 45%, rgba(255, 215, 0, 0.4), transparent),
-      radial-gradient(1px 1px at 85% 75%, rgba(255, 100, 200, 0.4), transparent),
-      radial-gradient(2px 2px at 20% 85%, rgba(0, 255, 255, 0.4), transparent),
-      radial-gradient(1px 1px at 60% 80%, rgba(255, 215, 0, 0.5), transparent),
-      radial-gradient(1px 1px at 90% 30%, rgba(255, 100, 200, 0.3), transparent),
-      radial-gradient(2px 2px at 40% 40%, rgba(0, 255, 255, 0.3), transparent)
-    pointer-events: none
-    z-index: 0
-    animation: starsTwinkle 4s ease-in-out infinite alternate
+/* ---------- 星星背景闪烁 ---------- */
+.magic-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 10% 20%, rgba(255, 215, 0, 0.5), transparent),
+    radial-gradient(2px 2px at 30% 60%, rgba(255, 100, 200, 0.4), transparent),
+    radial-gradient(1px 1px at 50% 15%, rgba(0, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 70% 45%, rgba(255, 215, 0, 0.4), transparent),
+    radial-gradient(1px 1px at 85% 75%, rgba(255, 100, 200, 0.4), transparent),
+    radial-gradient(2px 2px at 20% 85%, rgba(0, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 60% 80%, rgba(255, 215, 0, 0.5), transparent),
+    radial-gradient(1px 1px at 90% 30%, rgba(255, 100, 200, 0.3), transparent),
+    radial-gradient(2px 2px at 40% 40%, rgba(0, 255, 255, 0.3), transparent);
+  pointer-events: none;
+  z-index: 0;
+  animation: starsTwinkle 4s ease-in-out infinite alternate;
+}
 
-  // ---------- 右上角魔法学院徽章 ----------
-  &::after
-    content: '⚡ ✦ 🧙'
-    position: absolute
-    top: 10px
-    right: 18px
-    font-size: 16px
-    letter-spacing: 4px
-    color: rgba(255, 215, 0, 0.25)
-    pointer-events: none
-    z-index: 1
-    font-family: 'Georgia', serif
+/* ---------- 右上角魔法学院徽章 ---------- */
+.magic-box::after {
+  content: '⚡ ✦ 🧙';
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: rgba(255, 215, 0, 0.25);
+  pointer-events: none;
+  z-index: 1;
+  font-family: 'Georgia', serif;
+}
 
-  // ---------- 内容层 ----------
-  h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote, div
-    position: relative
-    z-index: 2
+/* ---------- 内容层 ---------- */
+.magic-box h1, .magic-box h2, .magic-box h3, .magic-box h4, .magic-box h5, .magic-box h6, .magic-box p, .magic-box ul, .magic-box ol, .magic-box blockquote, .magic-box div {
+  position: relative;
+  z-index: 2;
+}
 
-  // ---------- 标题 ----------
-  h1, h2, h3, h4
-    color: #f5e6f5
-    font-weight: 700
-    letter-spacing: 1px
-    text-shadow: 0 0 30px rgba(180, 100, 255, 0.2)
-    margin-top: 0
-    font-family: 'Georgia', serif
+/* ---------- 标题 ---------- */
+.magic-box h1, .magic-box h2, .magic-box h3, .magic-box h4 {
+  color: #f5e6f5;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 0 30px rgba(180, 100, 255, 0.2);
+  margin-top: 0;
+  font-family: 'Georgia', serif;
+}
 
-  // ---------- 强调文字（金色） ----------
-  strong, b
-    color: #ffd700
-    font-weight: 700
-    text-shadow: 0 0 20px rgba(255, 215, 0, 0.2), 0 0 60px rgba(255, 215, 0, 0.08)
+/* ---------- 强调文字（金色） ---------- */
+.magic-box strong, .magic-box b {
+  color: #ffd700;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.2), 0 0 60px rgba(255, 215, 0, 0.08);
+}
 
-  // ---------- 链接 ----------
-  a
-    color: #d4a0ff
-    text-decoration: none
-    border-bottom: 1.5px solid rgba(180, 100, 255, 0.25)
-    transition: all 0.4s ease
-    &:hover
-      color: #ffd700
-      border-bottom-color: #ffd700
-      text-shadow: 0 0 30px rgba(255, 215, 0, 0.15)
+/* ---------- 链接 ---------- */
+.magic-box a {
+  color: #d4a0ff;
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(180, 100, 255, 0.25);
+  transition: all 0.4s ease;
+}
+.magic-box a:hover {
+  color: #ffd700;
+  border-bottom-color: #ffd700;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
+}
 
-  // ---------- 无序列表（星星标记） ----------
-  ul
-    padding-left: 28px
-    list-style: none
-    li
-      margin: 10px 0
-      line-height: 1.8
-      padding-left: 8px
-      &::before
-        content: '✦ '
-        color: #ffd700
-        opacity: 0.7
-        font-size: 0.9em
+/* ---------- 无序列表（星星标记） ---------- */
+.magic-box ul {
+  padding-left: 28px;
+  list-style: none;
+}
+.magic-box ul li {
+  margin: 10px 0;
+  line-height: 1.8;
+  padding-left: 8px;
+}
+.magic-box ul li::before {
+  content: '✦ ';
+  color: #ffd700;
+  opacity: 0.7;
+  font-size: 0.9em;
+}
 
-  // ---------- 有序列表 ----------
-  ol
-    padding-left: 28px
-    li
-      margin: 10px 0
-      line-height: 1.8
-      &::marker
-        color: #ffd700
-        font-weight: 700
+/* ---------- 有序列表 ---------- */
+.magic-box ol {
+  padding-left: 28px;
+}
+.magic-box ol li {
+  margin: 10px 0;
+  line-height: 1.8;
+}
+.magic-box ol li::marker {
+  color: #ffd700;
+  font-weight: 700;
+}
 
-  // ---------- 行内代码（羊皮纸效果） ----------
-  code
-    background: rgba(180, 100, 255, 0.15)
-    padding: 2px 12px
-    border-radius: 4px
-    font-size: 0.9em
-    color: #d4a0ff
-    font-weight: 600
-    font-family: 'Courier New', monospace
-    border: 1px solid rgba(180, 100, 255, 0.15)
+/* ---------- 行内代码 ---------- */
+.magic-box code {
+  background: rgba(180, 100, 255, 0.15);
+  padding: 2px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: #d4a0ff;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  border: 1px solid rgba(180, 100, 255, 0.15);
+}
 
-  // ---------- 引用块（魔法卷轴效果） ----------
-  blockquote
-    margin: 16px 0 0 0
-    padding: 16px 24px
-    border-left: 4px solid #ffd700
-    background: rgba(255, 215, 0, 0.06)
-    border-radius: 0 8px 8px 0
-    color: #d4c8d4
-    font-style: italic
-    font-size: 1.05em
-    box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.03)
+/* ---------- 引用块 ---------- */
+.magic-box blockquote {
+  margin: 16px 0 0 0;
+  padding: 16px 24px;
+  border-left: 4px solid #ffd700;
+  background: rgba(255, 215, 0, 0.06);
+  border-radius: 0 8px 8px 0;
+  color: #d4c8d4;
+  font-style: italic;
+  font-size: 1.05em;
+  box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.03);
+}
 
-  // ---------- 分割线（彩色光带） ----------
-  hr
-    border: none
-    height: 2px
-    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), rgba(180, 100, 255, 0.2), transparent)
-    margin: 24px 0
-    position: relative
-    &::after
-      content: '✦'
-      position: absolute
-      left: 50%
-      top: 50%
-      transform: translate(-50%, -50%)
-      color: rgba(255, 215, 0, 0.25)
-      background: transparent
-      padding: 0 12px
+/* ---------- 分割线 ---------- */
+.magic-box hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), rgba(180, 100, 255, 0.2), transparent);
+  margin: 24px 0;
+  position: relative;
+}
+.magic-box hr::after {
+  content: '✦';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 215, 0, 0.25);
+  background: transparent;
+  padding: 0 12px;
+}
 
-  // ==========================================
-  // ⭐ 魔法风格表格（自动换行 + 横向滚动）
-  // ==========================================
-  table
-    display: block
-    overflow-x: auto
-    overflow-y: hidden
-    -webkit-overflow-scrolling: touch
-    width: 100%
-    max-width: 100%
-    border-collapse: collapse
-    margin: 16px 0
-    font-size: 0.9em
-    border-radius: 12px
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3)
+/* ---------- 魔法风格表格 ---------- */
+.magic-box table {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.9em;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+.magic-box table thead,
+.magic-box table tbody,
+.magic-box table tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+.magic-box table th,
+.magic-box table td {
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e8dce8;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.magic-box table th {
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+}
+.magic-box table tr:hover {
+  background: rgba(255, 215, 0, 0.06);
+}
+.magic-box table code {
+  background: rgba(180, 100, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #d4a0ff;
+  font-size: 0.85em;
+  word-break: break-word;
+}
 
-    thead,
-    tbody,
-    tr
-      display: table
-      width: 100%
-      table-layout: fixed
+/* ---------- 表格滚动条美化 ---------- */
+.magic-box table::-webkit-scrollbar {
+  height: 6px;
+}
+.magic-box table::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+.magic-box table::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.25);
+  border-radius: 4px;
+}
+.magic-box table::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.4);
+}
 
-    th,
-    td
-      padding: 10px 14px
-      text-align: left
-      vertical-align: top
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08)
-      color: #e8dce8
-      word-wrap: break-word
-      word-break: break-word
-      overflow-wrap: break-word
-      hyphens: auto
-
-    th
-      background: rgba(255, 215, 0, 0.12)
-      color: #ffd700
-      font-weight: 700
-      border-bottom: 2px solid rgba(255, 215, 0, 0.2)
-
-    tr:hover
-      background: rgba(255, 215, 0, 0.06)
-
-    code
-      background: rgba(180, 100, 255, 0.12)
-      padding: 2px 8px
-      border-radius: 4px
-      color: #d4a0ff
-      font-size: 0.85em
-      word-break: break-word
-
-  // ---------- 表格滚动条美化 ----------
-  table::-webkit-scrollbar
-    height: 6px
-
-  table::-webkit-scrollbar-track
-    background: rgba(255, 255, 255, 0.04)
-    border-radius: 4px
-
-  table::-webkit-scrollbar-thumb
-    background: rgba(255, 215, 0, 0.25)
-    border-radius: 4px
-    &:hover
-      background: rgba(255, 215, 0, 0.4)
-
-// ---------- 2. 魔杖光效（悬停发光） ----------
-.magic-box:hover
+/* ---------- 2. 魔杖光效（悬停发光） ---------- */
+.magic-box:hover {
   box-shadow: 
     0 0 60px rgba(138, 43, 226, 0.3),
     0 0 120px rgba(255, 215, 0, 0.1),
-    inset 0 0 60px rgba(138, 43, 226, 0.12)
-  border-color: rgba(255, 215, 0, 0.4)
+    inset 0 0 60px rgba(138, 43, 226, 0.12);
+  border-color: rgba(255, 215, 0, 0.4);
+}
 
-// ---------- 3. 星星闪烁动画 ----------
-@keyframes starsTwinkle
-  0% { opacity: 0.5 }
-  100% { opacity: 1 }
+/* ---------- 3. 星星闪烁动画 ---------- */
+@keyframes starsTwinkle {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
 
-// ---------- 4. 魔法光标 ----------
-.magic-cursor
-  display: inline-block
-  width: 3px
-  height: 1.2em
-  background: #ffd700
-  margin-left: 4px
-  animation: magicBlink 1.2s step-end infinite
-  vertical-align: text-bottom
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3)
+/* ---------- 4. 魔法光标 ---------- */
+.magic-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  background: #ffd700;
+  margin-left: 4px;
+  animation: magicBlink 1.2s step-end infinite;
+  vertical-align: text-bottom;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+@keyframes magicBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 
-@keyframes magicBlink
-  0%, 100% { opacity: 1 }
-  50% { opacity: 0 }
+/* ---------- 5. 魔法印章 ---------- */
+.magic-seal {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: rgba(255, 215, 0, 0.2);
+  font-family: 'Georgia', serif;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 215, 0, 0.08);
+  padding: 4px 16px;
+  border-radius: 30px;
+  margin-top: 12px;
+  background: rgba(255, 215, 0, 0.03);
+}
 
-// ---------- 5. 魔法印章 ----------
-.magic-seal
-  display: inline-block
-  font-size: 12px
-  letter-spacing: 3px
-  color: rgba(255, 215, 0, 0.2)
-  font-family: 'Georgia', serif
-  text-transform: uppercase
-  border: 1px solid rgba(255, 215, 0, 0.08)
-  padding: 4px 16px
-  border-radius: 30px
-  margin-top: 12px
-  background: rgba(255, 215, 0, 0.03)
+/* ---------- 6. 浮动动画 ---------- */
+@keyframes floatText {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.magic-float {
+  display: inline-block;
+  animation: floatText 3s ease-in-out infinite;
+}
 
-// ---------- 6. 浮动动画（魔法咒语飘动） ----------
-@keyframes floatText
-  0%, 100% { transform: translateY(0) }
-  50% { transform: translateY(-3px) }
+/* ---------- 7. 四大学院配色 ---------- */
+.magic-box-gryffindor {
+  border-color: rgba(255, 215, 0, 0.3);
+  background: linear-gradient(145deg, #1a0808, #4a0a0a, #1a0808);
+}
+.magic-box-gryffindor::after {
+  content: '🦁 ✦ 🧙';
+}
+.magic-box-gryffindor strong, .magic-box-gryffindor b {
+  color: #ffd700;
+}
+.magic-box-gryffindor blockquote {
+  border-left-color: #ffd700;
+}
+.magic-box-gryffindor .magic-seal {
+  border-color: rgba(255, 215, 0, 0.1);
+  color: rgba(255, 215, 0, 0.25);
+}
 
-.magic-float
-  display: inline-block
-  animation: floatText 3s ease-in-out infinite
+.magic-box-slytherin {
+  border-color: rgba(170, 170, 170, 0.3);
+  background: linear-gradient(145deg, #080f0a, #0a2a1a, #080f0a);
+}
+.magic-box-slytherin::after {
+  content: '🐍 ✦ 🧙';
+}
+.magic-box-slytherin strong, .magic-box-slytherin b {
+  color: #aaaaaa;
+}
+.magic-box-slytherin blockquote {
+  border-left-color: #aaaaaa;
+}
+.magic-box-slytherin .magic-seal {
+  border-color: rgba(170, 170, 170, 0.1);
+  color: rgba(170, 170, 170, 0.25);
+}
 
-// ---------- 7. 四大学院配色 ----------
+.magic-box-ravenclaw {
+  border-color: rgba(148, 107, 45, 0.3);
+  background: linear-gradient(145deg, #080c1a, #0a1a3a, #080c1a);
+}
+.magic-box-ravenclaw::after {
+  content: '🦅 ✦ 🧙';
+}
+.magic-box-ravenclaw strong, .magic-box-ravenclaw b {
+  color: #946b2d;
+}
+.magic-box-ravenclaw blockquote {
+  border-left-color: #946b2d;
+}
+.magic-box-ravenclaw .magic-seal {
+  border-color: rgba(148, 107, 45, 0.1);
+  color: rgba(148, 107, 45, 0.25);
+}
 
-// 🦁 格兰芬多（红金渐变）
-.magic-box-gryffindor
-  border-color: rgba(255, 215, 0, 0.3)
-  background: linear-gradient(145deg, #1a0808, #4a0a0a, #1a0808)
-  &::after
-    content: '🦁 ✦ 🧙'
-  strong, b
-    color: #ffd700
-  blockquote
-    border-left-color: #ffd700
-  .magic-seal
-    border-color: rgba(255, 215, 0, 0.1)
-    color: rgba(255, 215, 0, 0.25)
+.magic-box-hufflepuff {
+  border-color: rgba(236, 185, 57, 0.3);
+  background: linear-gradient(145deg, #1a1408, #3a2a0a, #1a1408);
+}
+.magic-box-hufflepuff::after {
+  content: '🦡 ✦ 🧙';
+}
+.magic-box-hufflepuff strong, .magic-box-hufflepuff b {
+  color: #ecb939;
+}
+.magic-box-hufflepuff blockquote {
+  border-left-color: #ecb939;
+}
+.magic-box-hufflepuff .magic-seal {
+  border-color: rgba(236, 185, 57, 0.1);
+  color: rgba(236, 185, 57, 0.25);
+}
 
-// 🐍 斯莱特林（绿银渐变）
-.magic-box-slytherin
-  border-color: rgba(170, 170, 170, 0.3)
-  background: linear-gradient(145deg, #080f0a, #0a2a1a, #080f0a)
-  &::after
-    content: '🐍 ✦ 🧙'
-  strong, b
-    color: #aaaaaa
-  blockquote
-    border-left-color: #aaaaaa
-  .magic-seal
-    border-color: rgba(170, 170, 170, 0.1)
-    color: rgba(170, 170, 170, 0.25)
-
-// 🦅 拉文克劳（蓝铜渐变）
-.magic-box-ravenclaw
-  border-color: rgba(148, 107, 45, 0.3)
-  background: linear-gradient(145deg, #080c1a, #0a1a3a, #080c1a)
-  &::after
-    content: '🦅 ✦ 🧙'
-  strong, b
-    color: #946b2d
-  blockquote
-    border-left-color: #946b2d
-  .magic-seal
-    border-color: rgba(148, 107, 45, 0.1)
-    color: rgba(148, 107, 45, 0.25)
-
-// 🦡 赫奇帕奇（黄黑渐变）
-.magic-box-hufflepuff
-  border-color: rgba(236, 185, 57, 0.3)
-  background: linear-gradient(145deg, #1a1408, #3a2a0a, #1a1408)
-  &::after
-    content: '🦡 ✦ 🧙'
-  strong, b
-    color: #ecb939
-  blockquote
-    border-left-color: #ecb939
-  .magic-seal
-    border-color: rgba(236, 185, 57, 0.1)
-    color: rgba(236, 185, 57, 0.25)
-
-// ---------- 8. 深色模式适配 ----------
-[data-theme="dark"]
-  .magic-box
-    border-color: rgba(255, 215, 0, 0.2)
-    background: linear-gradient(145deg, #0a0515, #1a0a3a, #0a0515)
-    box-shadow: 0 0 40px rgba(138, 43, 226, 0.2)
-    &::before
-      background-image: 
-        radial-gradient(2px 2px at 10% 20%, rgba(255, 215, 0, 0.6), transparent),
-        radial-gradient(2px 2px at 30% 60%, rgba(255, 100, 200, 0.5), transparent),
-        radial-gradient(1px 1px at 50% 15%, rgba(0, 255, 255, 0.6), transparent),
-        radial-gradient(2px 2px at 70% 45%, rgba(255, 215, 0, 0.5), transparent),
-        radial-gradient(1px 1px at 85% 75%, rgba(255, 100, 200, 0.5), transparent),
-        radial-gradient(2px 2px at 20% 85%, rgba(0, 255, 255, 0.5), transparent)
-
-  // 深色模式下的学院配色
-  .magic-box-gryffindor
-    background: linear-gradient(145deg, #0a0505, #2a0a0a, #0a0505)
-  .magic-box-slytherin
-    background: linear-gradient(145deg, #050a07, #0a1a10, #050a07)
-  .magic-box-ravenclaw
-    background: linear-gradient(145deg, #05060a, #0a0f2a, #05060a)
-  .magic-box-hufflepuff
-    background: linear-gradient(145deg, #0a0805, #1a150a, #0a0805)
+/* ---------- 8. 深色模式适配 ---------- */
+[data-theme="dark"] .magic-box {
+  border-color: rgba(255, 215, 0, 0.2);
+  background: linear-gradient(145deg, #0a0515, #1a0a3a, #0a0515);
+  box-shadow: 0 0 40px rgba(138, 43, 226, 0.2);
+}
+[data-theme="dark"] .magic-box::before {
+  background-image: 
+    radial-gradient(2px 2px at 10% 20%, rgba(255, 215, 0, 0.6), transparent),
+    radial-gradient(2px 2px at 30% 60%, rgba(255, 100, 200, 0.5), transparent),
+    radial-gradient(1px 1px at 50% 15%, rgba(0, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 70% 45%, rgba(255, 215, 0, 0.5), transparent),
+    radial-gradient(1px 1px at 85% 75%, rgba(255, 100, 200, 0.5), transparent),
+    radial-gradient(2px 2px at 20% 85%, rgba(0, 255, 255, 0.5), transparent);
+}
+[data-theme="dark"] .magic-box-gryffindor {
+  background: linear-gradient(145deg, #0a0505, #2a0a0a, #0a0505);
+}
+[data-theme="dark"] .magic-box-slytherin {
+  background: linear-gradient(145deg, #050a07, #0a1a10, #050a07);
+}
+[data-theme="dark"] .magic-box-ravenclaw {
+  background: linear-gradient(145deg, #05060a, #0a0f2a, #05060a);
+}
+[data-theme="dark"] .magic-box-hufflepuff {
+  background: linear-gradient(145deg, #0a0805, #1a150a, #0a0805);
+}
