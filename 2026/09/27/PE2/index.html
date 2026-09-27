@@ -1,0 +1,303 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>PE2 | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="进入到PE文件格式的第二篇，本篇重点IAT。  IAT–导入地址表IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。 IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PE2">
+<meta property="og:url" content="https://saoirse.github.io/2026/09/27/PE2/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="进入到PE文件格式的第二篇，本篇重点IAT。  IAT–导入地址表IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。 IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DL">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/2026-09-27_182622_094.jpg">
+<meta property="article:published_time" content="2026-09-27T09:08:54.000Z">
+<meta property="article:modified_time" content="2026-09-27T10:29:50.525Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="《逆向工程核心原理》">
+<meta property="article:tag" content="逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/2026-09-27_182622_094.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "PE2",
+  "url": "https://saoirse.github.io/2026/09/27/PE2/",
+  "image": "https://saoirse.github.io/img/2026-09-27_182622_094.jpg",
+  "datePublished": "2026-09-27T09:08:54.000Z",
+  "dateModified": "2026-09-27T10:29:50.525Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/09/27/PE2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'PE2',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/new_background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">25</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/20260927182757_3_5.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">PE2</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">PE2</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-27T09:08:54.000Z" title="发表于 2026-09-27 17:08:54">2026-09-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-27T10:29:50.525Z" title="更新于 2026-09-27 18:29:50">2026-09-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8A%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E3%80%8B/">《逆向工程核心原理》</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>进入到PE文件格式的第二篇，本篇重点IAT。</p>
+</blockquote>
+<h2 id="IAT–导入地址表"><a href="#IAT–导入地址表" class="headerlink" title="IAT–导入地址表"></a>IAT–导入地址表</h2><p>IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。</p>
+<h3 id="IMAGE-DIRECTORY-ENTRY-IMPORT，即导入表"><a href="#IMAGE-DIRECTORY-ENTRY-IMPORT，即导入表" class="headerlink" title="IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表"></a>IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表</h3><p>1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL（模块），并填充所需函数的地址。<br>2.IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT 叫做绑定导入表，在第一种导入表导入地址的修正是在PE加载时完成，如果一个PE文件导入的DLL或者函数多那么加载起来就会略显的慢一些，所以出现了绑定导入，在加载以前就修正了导入表，这样就会快一些。<br>3.IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT 叫做延迟导入表，一个PE文件也许提供了很多功能，也导入了很多其他DLL，但是并非每次加载都会用到它提供的所有功能，也不一定会用到它需要导入的所有DLL，因此延迟导入就出现了，只有在一个PE文件真正用到需要的DLL，这个DLL才会被加载，甚至于只有真正使用某个导入函数，这个函数地址才会被修正。<br>4.IMAGE_DIRECTORY_ENTRY_IAT 是导入地址表，前面的三个表其实是导入函数的描述，真正的函数地址是被填充在导入地址表中的。</p>
+<h3 id="IMAGE-IMPORT-DESCRIPTOR"><a href="#IMAGE-IMPORT-DESCRIPTOR" class="headerlink" title="IMAGE_IMPORT_DESCRIPTOR:"></a>IMAGE_IMPORT_DESCRIPTOR:</h3><p>记录PE文件要导入哪些库文件<br>Import：导入，向库提供服务。有哪些函数是PE文件在用<br>Export：导出，从库向其他PE文件提供服务。还有哪些表是由PE文件提供给别人用<br>都是面向库对……<br>exe大多只有导入表很少有导出表。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_IMPORT_DESCRIPTOR</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        DWORD   Characteristics;            <span class="comment">// 0 for terminating null import descriptor</span></span><br><span class="line">        DWORD   OriginalFirstThunk;         <span class="comment">// RVA to original unbound IAT (PIMAGE_THUNK_DATA)</span></span><br><span class="line">    &#125; DUMMYUNIONNAME;</span><br><span class="line">    DWORD   TimeDateStamp;                  <span class="comment">// 0 if not bound,</span></span><br><span class="line">                                            <span class="comment">// -1 if bound, and real date\time stamp</span></span><br><span class="line">                                            <span class="comment">//     in IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT (new BIND)</span></span><br><span class="line">                                            <span class="comment">// O.W. date/time stamp of DLL bound to (Old BIND)</span></span><br><span class="line"> </span><br><span class="line">    DWORD   ForwarderChain;                 <span class="comment">// -1 if no forwarders</span></span><br><span class="line">    DWORD   Name;</span><br><span class="line">    DWORD   FirstThunk;                     <span class="comment">// RVA to IAT (if bound this IAT has actual addresses)</span></span><br><span class="line">&#125; IMAGE_IMPORT_DESCRIPTOR;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;</span><br></pre></td></tr></table></figure>
+<p>使用 RtlImageDirectoryEntryToData 并将索引号传 1，会得到一个如上结构的指针，实际上指向一个上述结构的数组，每个导入的 DLL 都会成为数组中的一项，也就是说，一个这样的结构对应一个导入的 DLL。最后会以NULL结构体结束<br>● Characteristics 和 OriginalFirstThunk：一个联合体，如果是数组的最后一项 Characteristics 为 0，否则 OriginalFirstThunk 保存一个 RVA，指向一个 IMAGE_THUNK_DATA 的数组，这个数组中的每一项表示一个导入函数。<br>● TimeDateStamp：映象绑定前，这个值是0，绑定后是导入模块的时间戳。<br>● ForwarderChain：转发链，如果没有转发器，这个值是 -1 。<br>● Name：一个 RVA，指向导入模块的名字，所以一个 IMAGE_IMPORT_DESCRIPTOR 描述一个导入的DLL。<br>● FirstThunk：也是一个 RVA，也指向一个 IMAGE_THUNK_DATA 数组。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">OriginalFirstThunk ：INT的地址</span><br><span class="line">Name:库名称字符串的地址</span><br><span class="line">FirstThunk：IAT的地址</span><br></pre></td></tr></table></figure>
+<h3 id="IMAGE-THUNK-DATA-结构："><a href="#IMAGE-THUNK-DATA-结构：" class="headerlink" title="IMAGE_THUNK_DATA 结构："></a>IMAGE_THUNK_DATA 结构：</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_THUNK_DATA32</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        DWORD ForwarderString;      <span class="comment">// PBYTE </span></span><br><span class="line">        DWORD Function;             <span class="comment">// PDWORD  函数地址</span></span><br><span class="line">        DWORD Ordinal;				<span class="comment">//判断位</span></span><br><span class="line">        DWORD AddressOfData;        <span class="comment">// PIMAGE_IMPORT_BY_NAME</span></span><br><span class="line">    &#125; u1;</span><br><span class="line">&#125; IMAGE_THUNK_DATA32;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_THUNK_DATA32 * PIMAGE_THUNK_DATA32;</span><br></pre></td></tr></table></figure>
+<p>该结构体类似于一个union，如果Ordinal的最高位是1，就是按序号导入的，这时候，低16位就是导入序号，如果最高位是0，则AddressOfData是一个RVA，指向一个IMAGE_IMPORT_BY_NAME结构，用来保存名字信息，由于Ordinal和AddressOfData实际上是同一个内存空间，所以AddressOfData其实只有低31位可以表示RVA，但是一个PE文件不可能超过2G，所以最高位永远为0，这样设计很合理的利用了空间。实际编写代码的时候微软提供两个宏定义处理序号导入：IMAGE_SNAP_BY_ORDINAL 判断是否按序号导入，IMAGE_ORDINAL 用来获取导入序号。<br><strong>PE 文件导入表的核心结构以及 IAT 和 INT 的关系</strong><br>1.MAGE_IMPORT_DESCRIPTOR<br>导入表的目录项，每个 DLL 对应一个。<br>OriginalFirstThunk (INT 偏移)：指向 INT (导入名称表)，存的是函数名字。<br>Name：指向 DLL 名字（比如 kernel32.dll）。<br>FirstThunk (IAT 偏移)：指向 IAT (导入地址表)，存的是函数地址。<br>2.INT 和 IAT 关系<br>加载前：INT 和 IAT 内容一样，都指向函数名。<br>加载后：INT 保持原样（指向名字），IAT 被替换成真实内存地址。<br>3.IMAGE_IMPORT_BY_NAME（函数名结构体）<br>[图右下角]<br>第一个 WORD 是 Hint（函数在 DLL 导出表中的序号提示）。<br>后面跟着的就是函数名字符串（如 函数1、函数2）。<br><img src="/img/image-238.png"><br>再看本图，思考为什么由两个并行的指针数组[OriginalFirstThunk和FirstThunk]同时指向IMAGE_IMPORT_BY_NAME结构?<br>两个数组指向同一份函数名数据，其实是为了“加载前”和“加载后”两种状态服务。<br><img src="/img/image-239.png"><br>OriginalFirstThunk 与 FirstThunk：OriginalFirstThunk 指向的 IMAGE_THUNK_DATA 数组包含导入信息，在这个数组中只有 Ordinal 和 AddressOfData 是有用的，因此可以通过 OriginalFirstThunk 查找到函数的地址。FirstThunk则略有不同，在PE文件加载以前或者说在导入表未处理以前，他所指向的数组与 OriginalFirstThunk 中的数组虽不是同一个，但是内容却是相同的，都包含了导入信息，而在加载之后，FirstThunk 中的 Function 开始生效，他指向实际的函数地址，因为FirstThunk 实际上指向 IAT 中的一个位置，IAT 就充当了 IMAGE_THUNK_DATA 数组，加载完成后，这些 IAT 项就变成了实际的函数地址，即 Function 的意义</p>
+<blockquote>
+<p>总结一下就是，可以通过 OriginalFirstThunk 查找到函数的地址，而FirstThunk，在加载前后指向的是不一样的，导入表未处理前Function还没生效，和OriginalFirstThunk 指向的数组不是同一个，但内容一样。处理后Function生效，才指向实际的函数地址。</p>
+</blockquote>
+<h2 id="延迟导入表"><a href="#延迟导入表" class="headerlink" title="延迟导入表"></a>延迟导入表</h2><p>有些导入函数可能使用的频率比较低，或者在某些特定的场合才会用到，而有些函数可能要在程序运行一段时间后才会用到，这些函数可以等到他实际使用的时候再去加载对应的DLL，而没必要再程序一装载就初始化好。<br>VC有一个选项，可以让我们很方便的使用到这项特性，如下图所示：<br><img src="/img/image-240.png"><br> 在这一项后面填写需要延迟导入的DLL名称，连接器就会自动帮我们将这些DLL的导入变为延迟导入。<br>现在我们知道如何使用延迟导入了，那这个看上去很厉害的机制是如何实现的呢？接下来我们来探索一番。在IMAGE_DATA_DIRECTORY 中，有一项为 IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT，这一项便延迟导入表，IMAGE_DATA_DIRECTORY.VirtualAddress 就指向延迟导入表的起始地址。既然是表，肯定又是一个数组，每一项都是一个ImgDelayDesc r结构体，和导入表一样，每一项都代表一个导入的DLL，来看看定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[cpp] view plaincopy</span><br><span class="line"> </span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">ImgDelayDescr</span> &#123;</span>  </span><br><span class="line">    DWORD           grAttrs;        <span class="comment">// attributes  </span></span><br><span class="line">    RVA             rvaDLLName;     <span class="comment">// RVA to dll name  </span></span><br><span class="line">    RVA             rvaHmod;        <span class="comment">// RVA of module handle  </span></span><br><span class="line">    RVA             rvaIAT;         <span class="comment">// RVA of the IAT  </span></span><br><span class="line">    RVA             rvaINT;         <span class="comment">// RVA of the INT  </span></span><br><span class="line">    RVA             rvaBoundIAT;    <span class="comment">// RVA of the optional bound IAT  </span></span><br><span class="line">    RVA             rvaUnloadIAT;   <span class="comment">// RVA of optional copy of original IAT  </span></span><br><span class="line">    DWORD           dwTimeStamp;    <span class="comment">// 0 if not bound,  </span></span><br><span class="line">                                    <span class="comment">// O.W. date/time stamp of DLL bound to (Old BIND)  </span></span><br><span class="line">&#125; ImgDelayDescr, * PImgDelayDescr;  </span><br><span class="line"><span class="keyword">typedef</span> <span class="type">const</span> ImgDelayDescr *   PCImgDelayDescr;  </span><br></pre></td></tr></table></figure>
+<ol>
+<li>grAttrs：用来区分版本，1是新版本，0是旧版本，旧版本中后续的rvaxxxxxx域使用的都是指针，而新版本中都用RVA，我们只讨论新版本。</li>
+<li>rvaDLLName：一个RVA，指向导入DLL的名字。</li>
+<li>rvaHmod：一个RVA，指向导入DLL的模块基地址，这个基地址在DLL真正被导入前是NULL，导入后才是实际的基地址。</li>
+<li>rvaIAT：一个RVA,表示导入函数表，实际上指向IAT，在DLL加载前，IAT里存放的是一小段代码的地址，加载后才是真正的导入函数地址。</li>
+<li>rvaINT：一个RVA，指向导入函数的名字表。</li>
+<li>rvaUnloadIAT：延迟导入函数卸载表。</li>
+<li>dwTimeStamp：延迟导入DLL的时间戳。<br>在延迟导入函数指向的IAT里，默认保存的是一段代码的地址，当程序第一次调用到这个延迟导入函数时，流程会走到那段代码</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[cpp] view plaincopy</span><br><span class="line"> </span><br><span class="line">.text:75C7A363 __imp_load__InternetConnectA@32:        ; InternetConnectA(x,x,x,x,x,x,x,x)  </span><br><span class="line">.text:75C7A363                 mov     eax, offset __imp__InternetConnectA@32  </span><br><span class="line">.text:75C7A368                 jmp     __tailMerge_WININET  </span><br></pre></td></tr></table></figure>
+<p>第一行把导入函数IAT项的地址放到eax中，然后用一个jmp跳转走</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[cpp] view plaincopy</span><br><span class="line"> </span><br><span class="line">__tailMerge_WININET proc near             </span><br><span class="line">.text:75C6BEF0                 push    ecx  </span><br><span class="line">.text:75C6BEF1                 push    edx  </span><br><span class="line">.text:75C6BEF2                 push    eax  </span><br><span class="line">.text:75C6BEF3                 push    offset __DELAY_IMPORT_DESCRIPTOR_WININET  </span><br><span class="line">.text:75C6BEF8                 call    __delayLoadHelper  </span><br><span class="line">.text:75C6BEFD                 pop     edx  </span><br><span class="line">.text:75C6BEFE                 pop     ecx  </span><br><span class="line">.text:75C6BEFF                 jmp     eax  </span><br><span class="line">.text:75C6BEFF __tailMerge_WININET endp  </span><br></pre></td></tr></table></figure>
+<p>push 了一个 __DELAY_IMPORT_DESCRIPTOR_WININET，这个就是上文中看到的 ImgDelayDescr 结构，他的 DLL 名字是 wininet.dll。之后，CALL了一个__delayLoadHelper，在这个函数里，执行了加载DLL，查找导出函数，填充导入表等一系列操作，函数结束时IAT中已经是真正的导入函数的地址，这个函数同时返回了导入函数的地址，因此之后的eax里保存的就是函数地址，最后的 jmp eax 就跳转到了真实的导入函数中。<br>__delayLoadHelper 的参数中只有IAT项的偏移和整个模块的延迟导入描述__DELAY_IMPORT_DESCRIPTOR_WININET，但是参数中并没有要导入函数的名字。<br>MS在这里使用了一个巧妙的办法：__DELAY_IMPORT_DESCRIPTOR_WININET中有一项是rvaIAT，前面提到了，这里实际上就是指向了IAT，而且是该模块第一个导入函数的IAT的偏移，现在我们有两个偏移，即将导入的函数IAT项的偏移（记作RVA1）和要导入模块第一个函数IAT项的偏移（记作RVA0），(RVA1-RVA0)&#x2F;4 &#x3D; 导入函数IAT项在rvaIAT中的下标，rvaINT中的名字顺序与rvaIAT中的顺序是相同的，所以下标也相同，这样就能获取到导入函数的名字了。有了模块名和函数名，用 GetProcAddress 就可以获取到导入函数的地址了。<br><strong>PE 文件延迟导入完整机制</strong><br><img src="/img/image-241.png"><br>延迟导入的加载只发生在函数第一次被调用的时候，之后IAT就填充为正确函数地址，不会再走 __delayLoadHelper了。<br>延迟导入一次只会导入一个函数，而不是一次导入整个模块的所有函数。</p>
+<h2 id="导出表（EAT）"><a href="#导出表（EAT）" class="headerlink" title="导出表（EAT）"></a>导出表（EAT）</h2><p>导出表（Export Table）是 PE 文件里对外提供函数的结构，通常出现在 DLL 中。导出表记录了 DLL 名字、导出函数数量、函数名和函数地址，外部需要通过三张表（名字表、序号表、地址表）才能找到并调用你的函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_EXPORT_DIRECTORY</span> &#123;</span></span><br><span class="line">    DWORD   Characteristics;            <span class="comment">// 未使用</span></span><br><span class="line">    DWORD   TimeDateStamp;              <span class="comment">// 时间戳</span></span><br><span class="line">    WORD    MajorVersion;               <span class="comment">// 未使用</span></span><br><span class="line">    WORD    MinorVersion;               <span class="comment">// 未使用</span></span><br><span class="line">    DWORD   Name;                       <span class="comment">// 指向该导出表文件名字符串</span></span><br><span class="line">    DWORD   Base;                       <span class="comment">// 导出函数起始序号</span></span><br><span class="line">    DWORD   NumberOfFunctions;          <span class="comment">// 所有导出函数的个数</span></span><br><span class="line">    DWORD   NumberOfNames;              <span class="comment">// 以函数名字导出的函数个数</span></span><br><span class="line">    DWORD   AddressOfFunctions;         <span class="comment">// 导出函数地址表RVA</span></span><br><span class="line">    DWORD   AddressOfNames;             <span class="comment">// 导出函数名称表RVA</span></span><br><span class="line">    DWORD   AddressOfNameOrdinals;      <span class="comment">// 导出函数序号表RVA</span></span><br><span class="line">&#125; IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;</span><br></pre></td></tr></table></figure>
+<h2 id="空白区添加代码"><a href="#空白区添加代码" class="headerlink" title="空白区添加代码"></a>空白区添加代码</h2><blockquote>
+<p>这部分knowleadge在之后上手打补丁和破解程序或者修改程序的实战活动中有大用处.<br>E8和E9地址计算一样的<br>要根据硬编码改动，不依赖导入表。<br><img src="/img/image-242.png"><br>其中，新的地址F100000-&gt;是跳转的地址-当前地方的地址，再减去5。每个节之间的空白数据，也可以使用，插入恶意代码或者加壳做防护。注意构造指令时，文件地址和内存地址的转换，并且 改动入口点代码的指向这段代码。</p>
+</blockquote>
+<h3 id="扩大节区"><a href="#扩大节区" class="headerlink" title="扩大节区"></a>扩大节区</h3><p>最好是扩大最后一个节，资源部分。注意最后一个属性，要改成可执行<br>扩大节的步骤：<br>&lt;1&gt; 分配一块新的空间，大小为S<br>&lt;2&gt; 将最后一个节的SizeOfRawData和VirtualSize改成N<br>N &#x3D; (SizeOfRawData或者VirtualSize 内存对齐后的值) + S<br>&lt;3&gt; 修改SizeOfImage大小</p>
+<h3 id="增加节"><a href="#增加节" class="headerlink" title="增加节"></a>增加节</h3><p>添加一个节只需要40个字节，修改节数量的标志。之后按照结构修正对应数据：<br>首先，注意节的命名不可重复。其次，注意修改节区数量，这一步结束仅仅代表着新节区的描述完成，下面修改完对应结构成员的数据才算真正的构造好。最后，因为内存字节对齐机制，新添加的节区会导致数据错位，对上面的节区也要注意检查修正。<br>新增节的步骤：<br>&lt;1&gt; 判断是否有足够的空间，可以添加一个节表.<br>&lt;2&gt; 在节表中新增一个成员.<br>&lt;3&gt; 修改PE头中节的数量.<br>&lt;4&gt; 修改sizeOfImage的大小.<br>&lt;5&gt; 再原有数据的最后，新增一个节的数据(内存对齐的整数倍).<br>&lt;6&gt; 修正新增节表的属性.</p>
+<h3 id="合并节"><a href="#合并节" class="headerlink" title="合并节"></a>合并节</h3><p>合并节的步骤：<br>&lt;1&gt; 按照内存对齐展开<br>&lt;2&gt; 将第一个节的内存大小、文件大小改成一样<br>Max &#x3D; SizeOfRawData&gt;VirtualSize?SizeOfRawData:VirtualSize<br>SizeOfRawData &#x3D; VirtualSize &#x3D;<br>最后一个节的VirtualAddress + Max - SizeOfHeaders内存对齐后的大小.<br>&lt;3&gt; 将第一个节的属性改为包含所有节的属性.<br>&lt;4&gt; 修改节的数量为1.</p>
+<h2 id="重定位"><a href="#重定位" class="headerlink" title="重定位"></a>重定位</h2><h3 id="重定位操作原理"><a href="#重定位操作原理" class="headerlink" title="重定位操作原理"></a>重定位操作原理</h3><p>首先需要在程序中找到硬编码位置，读值然后减去ImageBase再加上实际加载地址。<br><strong>涉及到直接访问地址的都需要重定位</strong><br>重定位需要那些信息：<br>指令修改时，不改变其余内容，仅仅修正了地址<br>（重定位的算法：将直接寻址指令中的双字地址加上模块的实际装入地址与模块建议装入地址之差。）<br>1.需要修正的地址<br>2.建议装入的地址<br>3.实际装入的地址<br>PE文件的重定位表中保存的就是文件中所有需要进行重定位修正的的代码的地址<br>如果代码里 call 的地址是一个模块内的地址，而且是一个 VA，（也就是说，在程序中这个虚拟地址是写死的）那么如果模块基地址发生了变化，那地址不就失效了。这个问题怎么解决？<br>利用重定位表：<br>1.编译的时候由编译器识别出哪些项使用了模块内的直接VA。<br>2.连接器生成PE文件的时候将编译器识别的重定位的项记录在一张重定位表中。<br>3.PE文件加载的时候，PE加载器分析重定位表，将其中每一项按照现在的模块基址进行重定位。</p>
+<h3 id="重定位表的储存方式："><a href="#重定位表的储存方式：" class="headerlink" title="重定位表的储存方式："></a>重定位表的储存方式：</h3><p>DWORD–保存重定位的RVA<br>按照重定位项所在的页面分组，每组保存一个页面其实地址的RVA，页内的每项重定位项使用一个WORD保存重定位项在页内的偏移，这样就大大缩小了重定位表的大小。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_BASE_RELOCATION</span> &#123;</span></span><br><span class="line">    DWORD   VirtualAddress;</span><br><span class="line">    DWORD   SizeOfBlock;</span><br><span class="line"><span class="comment">//  WORD    TypeOffset[1];</span></span><br><span class="line">&#125; IMAGE_BASE_RELOCATION;</span><br><span class="line"><span class="keyword">typedef</span> IMAGE_BASE_RELOCATION UNALIGNED * PIMAGE_BASE_RELOCATION;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>VirtualAddress：页起始地址RVA。</li>
+<li>SizeOfBlock：表示该分组保存了几项重定位项。</li>
+<li>TypeOffset： 这个域有两个含义，大家都知道，页内偏移用12位就可以表示，剩下的高4位用来表示重定位的类型。而事实上，Windows只用了一种类型IMAGE_REL_BASED_HIGHLOW  数值是 3。<br><img src="/img/image-243.png"></li>
+</ol>
+<h3 id="需要被重定位的项："><a href="#需要被重定位的项：" class="headerlink" title="需要被重定位的项："></a>需要被重定位的项：</h3><p>● 1. 代码中使用全局变量的指令，因为全局变量一定是模块内的地址，而且使用全局变量的语句在编译后会产生一条引用全局变量基地址的指令。<br>● 2. 将模块函数指针赋值给变量或作为参数传递，因为赋值或传递参数是会产生mov和push指令，这些指令需要直接地址。<br>● 3. C++中的构造函数和析构函数赋值虚函数表指针，虚函数表中的每一项本身就是重定位项</p>
+<blockquote>
+<p>虚函数表本身不是“重定位项”，但 vtable 里存放的每个函数指针，都是需要被重定位的“绝对地址引用”。</p>
+</blockquote>
+<h2 id="资源结构"><a href="#资源结构" class="headerlink" title="资源结构"></a>资源结构</h2><p>资源是PE 文件中非常重要的部分，几乎所有的PE 文件中都包含着资源，与导入表和导出表相比，资源的组织方式要复杂很多<br><strong>PE 文件的资源结构</strong><br><img src="/img/image-244.png"><br>从图中可以看到，PE 文件中的资源是按照 资源类型 -&gt; 资源ID -&gt; 资源代码页 的3层树型目录结构来组织资源的，通过层层索引才能够进入相应的子目录找到正确的资源。<br><strong>资源目录结构：</strong><br><img src="/img/image-245.png"><br>MAGE_RESOURCE_DIRECTORY 与 IMAGE_RESOURCE_DIRECTORY_ENTRY 结构体定义</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_RESOURCE_DIRECTORY</span> &#123;</span></span><br><span class="line">    DWORD   Characteristics;      <span class="comment">//属性，一般为0</span></span><br><span class="line">    DWORD   TimeDateStamp;        <span class="comment">//资源的产生时刻，一般为0</span></span><br><span class="line">    WORD    MajorVersion;         <span class="comment">//主版本号，一般为0</span></span><br><span class="line">    WORD    MinorVersion;         <span class="comment">//次版本号，一般为0</span></span><br><span class="line">    WORD    NumberOfNamedEntries; <span class="comment">//以名称（字符串）命名的资源数量</span></span><br><span class="line">    WORD    NumberOfIdEntries;    <span class="comment">//以ID（整型数字）命名的资源数量</span></span><br><span class="line">&#125; IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_RESOURCE_DIRECTORY_ENTRY</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">            DWORD NameOffset:<span class="number">31</span>;</span><br><span class="line">            DWORD NameIsString:<span class="number">1</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">        DWORD   Name;</span><br><span class="line">        WORD    Id;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">        DWORD   OffsetToData;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">            DWORD   OffsetToDirectory:<span class="number">31</span>;</span><br><span class="line">            DWORD   DataIsDirectory:<span class="number">1</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125; IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;</span><br></pre></td></tr></table></figure>
+<p><strong>头部结构 IMAGE_RESOURCE_DIRECTORY</strong><br>在这里要注意的就是 NumberOfNamedEntries 和 NumberOfIdEntries，它们说明了本目录中目录项的数量。两者加起来就是本目录中的目录项总和。也就是后边跟着的 IMAGE_RESOURCE_DIRECTORY_ENTRY 数目。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Characteristics DWORD ? ;理论上为资源的属性，不过事实上总是<span class="number">0</span></span><br><span class="line">TimeDateStamp DWORD ? ;资源的产生时刻</span><br><span class="line">MajorVersion WORD ? ;理论上为资源的版本，不过事实上总是<span class="number">0</span></span><br><span class="line">MinorVersion WORD ?</span><br><span class="line">NumberOfNamedEntries WORD ? ;以名称（字符串）命名的入口数量</span><br><span class="line">NumberOfIdEntries WORD ? ;以ID（整型数字）命名的入口数量</span><br><span class="line">IMAGE_RESOURCE_DIRECTORY ENDS</span><br></pre></td></tr></table></figure>
+<h3 id="第一层："><a href="#第一层：" class="headerlink" title="第一层："></a>第一层：</h3><p>第一层起始于一个 IMAGE_RESOURCE_DIRECTORY 头，后面紧接着是 IMAGE_RESOURCE_DIRECTORY_ENTRY 数组。数组个数 &#x3D; NumberOfNamedEntries + NumberOfIdEntries。<br>IMAGE_RESOURCE_DIRECTORY_ENTRY 使用的是 Name 与 OffsetToDirectory，分别代表了资源类型与第二层的数据偏移地址。Name 与资源类型的匹配如下：<br><img src="/img/image-246.png"><br>OffsetToDirectory 数据偏移地址是相对整个资源结构来说的，也就是说首个第一层的起始偏移地址加上 OffsetToDirectory 就是第二层的偏移地址。</p>
+<h3 id="第二层："><a href="#第二层：" class="headerlink" title="第二层："></a>第二层：</h3><p>与第一层一样，第二层起始于一个IMAGE_RESOURCE_DIRECTORY头，后面紧接着是IMAGE_RESOURCE_DIRECTORY_ENTRY 数组。数组个数&#x3D;NumberOfNamedEntries+NumberOfIdEntries。<br> IMAGE_RESOURCE_DIRECTORY_ENTRY使用的是NameIsString、NameOffset、Id与OffsetToDirectory。其中OffsetToDirectory与第一层一样，代表了第三层的数据偏移地址，同样是相对整个资源结构来说的。<br>如果NameIsString&#x3D;1，说明该资源以名称(UNICODE编码的字符串)定义的，NameOffset是名称的相对整个资源结构的偏移地址。相反，如果NameIsString&#x3D;0，说明该资源以ID(整型数字)定义的，ID号为Id。<br> NameOffset相对地址指向的是IMAGE_RESOURCE_DIR_STRING_U结构体，该结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_RESOURCE_DIR_STRING_U</span> &#123;</span></span><br><span class="line">    WORD    Length;           <span class="comment">//字符串的长度</span></span><br><span class="line">    WCHAR   NameString[ <span class="number">1</span> ];  <span class="comment">//UNICODE字符串，由于字符串是不定长的。由Length 制定长度</span></span><br><span class="line">&#125; IMAGE_RESOURCE_DIR_STRING_U, *PIMAGE_RESOURCE_DIR_STRING_U;</span><br></pre></td></tr></table></figure>
+<p><img src="/img/image-247.png"></p>
+<h3 id="第三层："><a href="#第三层：" class="headerlink" title="第三层："></a>第三层：</h3><p>与前两层一样，第二层起始于一个IMAGE_RESOURCE_DIRECTORY头，后面紧接着是IMAGE_RESOURCE_DIRECTORY_ENTRY数组，但不同的是数组个数&#x3D;1。<br>  IMAGE_RESOURCE_DIRECTORY_ENTRY使用的是Name与OffsetToData，分别代表了资源语言类型与资源数据相对地址。Name是指语言内码，比如936代表简体中文。<br>OffsetToData是相对整个资源结构的偏移地址，指向一个IMAGE_RESOURCE_DATA_ENTRY结构体，该结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">IMAGE_RESOURCE_DATA_ENTRY</span> &#123;</span></span><br><span class="line">    DWORD   OffsetToData;  <span class="comment">//资源数据的RVA</span></span><br><span class="line">    DWORD   Size;          <span class="comment">//资源数据的长度</span></span><br><span class="line">    DWORD   CodePage;      <span class="comment">//代码页, 一般为0</span></span><br><span class="line">    DWORD   Reserved;      <span class="comment">//保留字段</span></span><br><span class="line">&#125; IMAGE_RESOURCE_DATA_ENTRY, *PIMAGE_RESOURCE_DATA_ENTRY;</span><br></pre></td></tr></table></figure>
+<h3 id="从可执行文件中删除-reloc"><a href="#从可执行文件中删除-reloc" class="headerlink" title="从可执行文件中删除.reloc"></a>从可执行文件中删除.reloc</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.整理节区头</span><br><span class="line">2.删除节区</span><br><span class="line">3.修改image_file_header</span><br><span class="line">4.修改image——optional——header</span><br></pre></td></tr></table></figure>
+<p>删除节区头和节区后只是物理意义上获得删除，想要真正的删除还需要在这个结构体中修改：<br>number of sections原本的值是5，现在删除一个节区数量减一</p>
+<p>好了,这个PE文件格式当时就学到这里。暑假的时候，还玩了几个程序破解修改程序还有后面的TLS回调函数添加等，感觉实战是有100000分意思的，好想快速毕业工作。前两天是中秋，也没出门虽然转了安卓逆向，但仍然痴迷程序破解，咋这么好玩。。。接着这篇文章也向大家道一句，中秋节快乐！^^</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/09/27/PE2/">https://saoirse.github.io/2026/09/27/PE2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91/">逆向</a><a class="post-meta__tags" href="/tags/%E3%80%8A%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E3%80%8B/">《逆向工程核心原理》</a></div><div class="post-share"><div class="social-share" data-image="/img/2026-09-27_182622_094.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/09/27/PE/" title="PE文件格式[1]"><img class="cover" src="/img/2026-09-27_101411_363.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">PE文件格式[1]</div></div><div class="info-2"><div class="info-item-1"> 本篇主要讲解PE文件部分内容，IAT和EAT等-请翻阅PE文件格式【2】。PE文件是Windows系统中可执行文件格式，有exe,scr（可执行）,dll,ocx,cpl,drv（库）。想要在文件中打补丁或者修改程序硬编码，都需要对文件标志有所了解，甚至可以说是最好达到熟悉的程度PE文件包括DOS部分、PE文件头和节表和节数据。从DOS头（DOS header ）到节区头（Sectionheader）是PE头部分，其下的节区合称PE体。节数据包括代码（.text）、数据（.data）、资源（.rsrc）节，分别保存。  重要结构体：PEview看PE文件结构体如下： VA&amp;RVAVA指的是，进程虚拟内存的绝对地址，RVA指的是从某个基准位置开始的相对地址。二者之间有一定的相互转换关系RVA+ImageBase&#x3D;VA[其中ImageBase表示基准]VA是程序运行时真正访问的地址，RVA是PE文件内部记录地址的方式。 DOS头作用总结：标识文件类型，定位PE头。作为PE文件的文件标志。IMAGE_DOS_HEADER  (MZ文件头 0x40) 12345678...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/09/27/PE/" title="PE文件格式[1]"><img class="cover" src="/img/2026-09-27_101411_363.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-27</div><div class="info-item-2">PE文件格式[1]</div></div><div class="info-2"><div class="info-item-1"> 本篇主要讲解PE文件部分内容，IAT和EAT等-请翻阅PE文件格式【2】。PE文件是Windows系统中可执行文件格式，有exe,scr（可执行）,dll,ocx,cpl,drv（库）。想要在文件中打补丁或者修改程序硬编码，都需要对文件标志有所了解，甚至可以说是最好达到熟悉的程度PE文件包括DOS部分、PE文件头和节表和节数据。从DOS头（DOS header ）到节区头（Sectionheader）是PE头部分，其下的节区合称PE体。节数据包括代码（.text）、数据（.data）、资源（.rsrc）节，分别保存。  重要结构体：PEview看PE文件结构体如下： VA&amp;RVAVA指的是，进程虚拟内存的绝对地址，RVA指的是从某个基准位置开始的相对地址。二者之间有一定的相互转换关系RVA+ImageBase&#x3D;VA[其中ImageBase表示基准]VA是程序运行时真正访问的地址，RVA是PE文件内部记录地址的方式。 DOS头作用总结：标识文件类型，定位PE头。作为PE文件的文件标志。IMAGE_DOS_HEADER  (MZ文件头 0x40) 12345678...</div></div></div></a><a class="pagination-related" href="/2026/08/24/%E5%A4%A9%E5%A0%82%E4%B9%8B%E9%97%A8/" title="天堂之门 -- 初识篇"><img class="cover" src="/img/20260826210055_21_221.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-24</div><div class="info-item-2">天堂之门 -- 初识篇</div></div><div class="info-2"><div class="info-item-1">天堂之门，是建立在WoW64技术上的逆向反调试技术。 关于WoW64WoW64是Windows x64提供的一种兼容机制，可以认为WoW64是64位Windows系统创建的一个32位的模拟环境，使得32位可执行程序能够在64位的操作系统上正常运行。WoW64实现了对32位应用程序的透明兼容主要通过以下方式：1.系统调用转化：32位系统调用转换为64位系统调用。2.地址空间隔离：32位进程和64位进程拥有各自的虚拟地址空间。3.库文件分离：WoW64将32位和64位的库文件分别存储在不同的系统目录中。◆在32位程序中，使用syscallorcall以及jmp far ptrorcall far ptr实现跨位运行。◆ps：在windows下调试时windbg对32&#x2F;64位切换的支持较好，其他如ida、x32dbg等调试器在retf语句后都无法调试。 前情提要：x64下的进程我们知道，windows的程序分为64位和32位，但不管是64还是32位实际上都映射两个地址空间，也就是一个进程有两种工作模式。由于在64位操作系统中，32位程序无法直接运行，因此操作系统提供了一个成为...</div></div></div></a><a class="pagination-related" href="/2026/06/21/flower/" title="A Beautiful Flower"><img class="cover" src="/img/260621203457_8_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-21</div><div class="info-item-2">A Beautiful Flower</div></div><div class="info-2"><div class="info-item-1">花指令：既在代码中添加永恒跳转的指令，或者垃圾数据目的是干扰ida等软件对程序的静态分析，使调试工具无法正常反汇编出伪代码。 前情提要–花指令的实现方式常见手法包括：1）无效跳转和垃圾字节；2）利用反汇编线性扫描缺陷；3）修改返回地址；4）多态变形 俗话说，知己知彼，百战不殆。花指令目的是干扰软件的静态分析，当然就要了解ida常用的反汇编算法，这样才能想办法绕过检测。 ida常用的反汇编算法：1.线性扫描算法：逐行反汇编（无法将数据和内容进行区分）2.递归行进算法：按照代码可能的执行顺序进行反汇编程序 在程序中会执行的花指令可执行花指令指的是花指令代码在程序的正常执行过程中会被执行，但执行这些代码没有任何意义，执行前后不改变任何寄存器的值，同时这部分代码也会被反汇编器正常识别 压栈后恢复栈地址通过压栈和修改栈指针来干扰反汇编器，但实际执行时会恢复栈指针，使得代码能正常执行。通常用于制造反汇编错误，使得静态分析工具无法正确识别指令边界，隐藏真实的代码逻辑。常见：在汇编语言中push是入栈，pop是出栈使用push指令将一些数据（可能是垃圾数据或有用数据）压入栈中。然后使用pop指令...</div></div></div></a><a class="pagination-related" href="/2026/09/21/VMP%E7%B1%BB%E5%9E%8B/" title="VMP壳--初识"><img class="cover" src="/img/20260926174757_12_58.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-21</div><div class="info-item-2">VMP壳--初识</div></div><div class="info-2"><div class="info-item-1">VMP 的特色功能包括虚拟化、混淆、反调试等。  VMProtect 虚拟化原理VMP是一款栈机，其代码虚拟机和被保护的程序代码都存在栈中。基于栈的虚拟机指令集主要是通过操作栈顶元素来完成。  VM虚拟化流程： 代码转换成指令：每个指令会有一个函数对应解释这个指令，相当于小型的解释器  VMP 还会对一些系统对象如文件、注册表等进行虚拟化，在虚拟机内部维护虚拟的系统资源，使得在虚拟机内部的系统交互不会影响到真实系统。 VMP 通常会结合多种反调试技术,例如代码自修改、反跟踪、反模拟执行等，增加调试难度。  初始化虚拟环境：开启VStartVM 代码,从现实环境转换到虚拟环境,并且初始化虚拟机的上下文环境，将真实环境中的寄存器状态保存（压栈），准备虚拟机所需要的栈堆空间。 VStartVM 代码部分还可能对一些关键的API进行HOOK，截获系统调用，在虚拟环境中模拟执行。允许在受保护的代码块中插入特定指令用于切换回真实环境。  读取虚拟化指令+执行：  VMDispatcher：从虚拟指令流中读取虚拟指令，并且解码确定对应的处理程序。解码后并非直接执行真是指令，而是调用相应的han...</div></div></div></a><a class="pagination-related" href="/2026/06/07/shellcode/" title="shellcode逆向"><img class="cover" src="/img/20210426110332_bab78.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-07</div><div class="info-item-2">shellcode逆向</div></div><div class="info-2"><div class="info-item-1">Shellcode什么是shellcode呢？shell不是终端命令吗？^^ Shellcode逆向篇shellcode的自我介绍形似二进制数据但能利用程序原有漏洞发出恶意攻击的东西shellcode看着是一段二进制数据，实则是一个能在特定环境下生存或者执行的代码胶囊。最初shellcode的功能是打开终端命令行，现在我们还可以利用shellcode实现某些攻击，比如添加用户、反向连接、下载执行等。 一个能够工作的shellcode长这样，当然，仅仅有这部分二进制数据是达不到攻击效果的，还需要结合别的过程 这是从某个题里面抠出来的shellcode部分数据，但是记不得是哪个题了，看一下长什么样就好了 1234567891011121314unsigned char shellcode[] = &quot;\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64\x8b\x50\x30&quot;&quot;\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7\x4a\x26\x31\xff&quot;&q...</div></div></div></a><a class="pagination-related" href="/2026/08/11/%E5%B7%85%E5%B3%B0%E6%9E%81%E5%AE%A2/" title="巅峰极客 - RE.WP"><img class="cover" src="/img/20260811082018_15_21.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-11</div><div class="info-item-2">巅峰极客 - RE.WP</div></div><div class="info-2"><div class="info-item-1">前一段复现了几道巅峰极客的题目，现在更新发出来，大赛的出题思路是和小比赛不一样，能学到更多有用的知识。 [巅峰极客 2021]baby_maze（无地图迷宫求解）仍然是先查壳，elf文件无壳由于大概知道这个题目意思，所以把程序放进ida之后，我们的首要目的是要找到方向和迷宫地图，确定地图是二维还是三维。但其实不论是通过分析代码还是直接查找字符串都得不到地图的信息，这道迷宫题目新颖的地方也就在这里，他没有给你地图，通过动调也能发现这里是你走一步给你一个反馈判断是否正确。那我们肯定不考虑傻傻的手解，先通过动调找到迷宫的起始点函数和结尾返回的函数。现在我们能确认的是，迷宫行走时的方向键四个AWSD，Q是退出。迷宫起点函数 1234567891011121314151617181920212223242526272829void __noreturn sub_40187C()&#123;  char v0; // [rsp+Fh] [rbp-1h]  sub_55D500(&quot;Just do it&quot;);  while ( 1 )  &#123;    sub_59746...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学那个名叫逆向的魔法，咒语是debug,hook......</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">25</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新，请大佬们多多指教Orz! 很多内容是很久以前写下的笔记，参考一些大佬文章忘记记录网址，如有侵权，请联系我，我愿配合一切合理处理行为，感谢各位网络恩师^^</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#IAT%E2%80%93%E5%AF%BC%E5%85%A5%E5%9C%B0%E5%9D%80%E8%A1%A8"><span class="toc-number">1.</span> <span class="toc-text">IAT–导入地址表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IMAGE-DIRECTORY-ENTRY-IMPORT%EF%BC%8C%E5%8D%B3%E5%AF%BC%E5%85%A5%E8%A1%A8"><span class="toc-number">1.1.</span> <span class="toc-text">IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IMAGE-IMPORT-DESCRIPTOR"><span class="toc-number">1.2.</span> <span class="toc-text">IMAGE_IMPORT_DESCRIPTOR:</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IMAGE-THUNK-DATA-%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="toc-number">1.3.</span> <span class="toc-text">IMAGE_THUNK_DATA 结构：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BB%B6%E8%BF%9F%E5%AF%BC%E5%85%A5%E8%A1%A8"><span class="toc-number">2.</span> <span class="toc-text">延迟导入表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%BC%E5%87%BA%E8%A1%A8%EF%BC%88EAT%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">导出表（EAT）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A9%BA%E7%99%BD%E5%8C%BA%E6%B7%BB%E5%8A%A0%E4%BB%A3%E7%A0%81"><span class="toc-number">4.</span> <span class="toc-text">空白区添加代码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A9%E5%A4%A7%E8%8A%82%E5%8C%BA"><span class="toc-number">4.1.</span> <span class="toc-text">扩大节区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A2%9E%E5%8A%A0%E8%8A%82"><span class="toc-number">4.2.</span> <span class="toc-text">增加节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%88%E5%B9%B6%E8%8A%82"><span class="toc-number">4.3.</span> <span class="toc-text">合并节</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E5%AE%9A%E4%BD%8D"><span class="toc-number">5.</span> <span class="toc-text">重定位</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%AE%9A%E4%BD%8D%E6%93%8D%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="toc-number">5.1.</span> <span class="toc-text">重定位操作原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8%E7%9A%84%E5%82%A8%E5%AD%98%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="toc-number">5.2.</span> <span class="toc-text">重定位表的储存方式：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9C%80%E8%A6%81%E8%A2%AB%E9%87%8D%E5%AE%9A%E4%BD%8D%E7%9A%84%E9%A1%B9%EF%BC%9A"><span class="toc-number">5.3.</span> <span class="toc-text">需要被重定位的项：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%84%E6%BA%90%E7%BB%93%E6%9E%84"><span class="toc-number">6.</span> <span class="toc-text">资源结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%9A"><span class="toc-number">6.1.</span> <span class="toc-text">第一层：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%EF%BC%9A"><span class="toc-number">6.2.</span> <span class="toc-text">第二层：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E5%B1%82%EF%BC%9A"><span class="toc-number">6.3.</span> <span class="toc-text">第三层：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E4%B8%AD%E5%88%A0%E9%99%A4-reloc"><span class="toc-number">6.4.</span> <span class="toc-text">从可执行文件中删除.reloc</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE2/" title="PE2"><img src="/img/2026-09-27_182622_094.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE2"/></a><div class="content"><a class="title" href="/2026/09/27/PE2/" title="PE2">PE2</a><time datetime="2026-09-27T09:08:54.000Z" title="发表于 2026-09-27 17:08:54">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE/" title="PE文件格式[1]"><img src="/img/2026-09-27_101411_363.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE文件格式[1]"/></a><div class="content"><a class="title" href="/2026/09/27/PE/" title="PE文件格式[1]">PE文件格式[1]</a><time datetime="2026-09-27T02:04:48.000Z" title="发表于 2026-09-27 10:04:48">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/26/HOOK-1/" title="HOOK--初识"><img src="/img/20260926174600_10_58.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="HOOK--初识"/></a><div class="content"><a class="title" href="/2026/09/26/HOOK-1/" title="HOOK--初识">HOOK--初识</a><time datetime="2026-09-26T09:13:43.000Z" title="发表于 2026-09-26 17:13:43">2026-09-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/21/VMP%E7%B1%BB%E5%9E%8B/" title="VMP壳--初识"><img src="/img/20260926174757_12_58.png" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="VMP壳--初识"/></a><div class="content"><a class="title" href="/2026/09/21/VMP%E7%B1%BB%E5%9E%8B/" title="VMP壳--初识">VMP壳--初识</a><time datetime="2026-09-21T09:48:22.000Z" title="发表于 2026-09-21 17:48:22">2026-09-21</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/06/%E8%A5%BF%E6%B9%962022-1/" title="西湖论剑2022——Dualpersonality"><img src="/img/20260826210104_26_221.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="西湖论剑2022——Dualpersonality"/></a><div class="content"><a class="title" href="/2026/09/06/%E8%A5%BF%E6%B9%962022-1/" title="西湖论剑2022——Dualpersonality">西湖论剑2022——Dualpersonality</a><time datetime="2026-09-06T09:51:24.000Z" title="发表于 2026-09-06 17:51:24">2026-09-06</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
