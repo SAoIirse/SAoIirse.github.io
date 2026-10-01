@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>栈和栈帧 | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="栈应于存储局部变量，传递函数参数，保存函数返回地址。调试程序应该不断观察栈内存。在逆向的时候我们经常说到的bp，sp都和栈有关，汇编语言表达栈段为寄存器SS，SP在汇编中则表示栈顶在段内的偏移。 栈的作用1.暂时保护函数内的局部变量2.调用函数时传递参数3.保存函数返回后的地址ESP为栈顶指针，初始在栈底(高地址)，PUSH使ESP自减移到栈顶方向。 栈指针变化规律：栈指针随着压栈出栈的数据移动，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="栈和栈帧">
+<meta property="og:url" content="https://saoirse.github.io/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="栈应于存储局部变量，传递函数参数，保存函数返回地址。调试程序应该不断观察栈内存。在逆向的时候我们经常说到的bp，sp都和栈有关，汇编语言表达栈段为寄存器SS，SP在汇编中则表示栈顶在段内的偏移。 栈的作用1.暂时保护函数内的局部变量2.调用函数时传递参数3.保存函数返回后的地址ESP为栈顶指针，初始在栈底(高地址)，PUSH使ESP自减移到栈顶方向。 栈指针变化规律：栈指针随着压栈出栈的数据移动，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/2026-09-27_182622_094.jpg">
+<meta property="article:published_time" content="2026-09-27T11:41:42.000Z">
+<meta property="article:modified_time" content="2026-10-01T08:20:45.093Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="《逆向工程核心原理》">
+<meta property="article:tag" content="逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/2026-09-27_182622_094.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "栈和栈帧",
+  "url": "https://saoirse.github.io/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/",
+  "image": "https://saoirse.github.io/img/2026-09-27_182622_094.jpg",
+  "datePublished": "2026-09-27T11:41:42.000Z",
+  "dateModified": "2026-10-01T08:20:45.093Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '栈和栈帧',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/new_background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">26</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/20260927182757_3_5.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">栈和栈帧</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">栈和栈帧</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-27T11:41:42.000Z" title="发表于 2026-09-27 19:41:42">2026-09-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-01T08:20:45.093Z" title="更新于 2026-10-01 16:20:45">2026-10-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E3%80%8A%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E3%80%8B/">《逆向工程核心原理》</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p><strong>栈应于存储局部变量，传递函数参数，保存函数返回地址。调试程序应该不断观察栈内存。</strong><br>在逆向的时候我们经常说到的bp，sp都和栈有关，汇编语言表达栈段为寄存器SS，SP在汇编中则表示栈顶在段内的偏移。</p>
+<h2 id="栈的作用"><a href="#栈的作用" class="headerlink" title="栈的作用"></a>栈的作用</h2><p>1.暂时保护函数内的局部变量<br>2.调用函数时传递参数<br>3.保存函数返回后的地址<br><img src="/img/image-248.png"><br>ESP为栈顶指针，初始在栈底(高地址)，PUSH使ESP自减移到栈顶方向。</p>
+<h2 id="栈指针变化规律："><a href="#栈指针变化规律：" class="headerlink" title="栈指针变化规律："></a>栈指针变化规律：</h2><p>栈指针随着压栈出栈的数据移动，入栈时栈指针地址减少，出栈时栈指针地址增加。栈顶地址小于栈底地址。<br><strong>判断方法</strong></p>
+<ol>
+<li>看助记符，判断属于哪类：<br>  ○ push &#x2F; call → 入栈<br>  ○ pop &#x2F; ret → 出栈<br>  ○ sub esp, N → 分配（栈顶下降）<br>  ○ add esp, N &#x2F; mov esp, ebp &#x2F; leave → 回收（栈顶上升）<br>  ○ 其余 → 一般不动 ESP</li>
+<li>改 ESP：<br>  ○ x86：每次 ±4<br>  ○ x64：每次 ±8</li>
+<li>写&#x2F;读栈内存（只有 push&#x2F;pop&#x2F;call&#x2F;ret 才真正读写栈内容；sub esp 只是移动指针，不清内存）。</li>
+<li>注意隐式入栈：call 会自动压入返回地址，ret 会自动弹出返回地址，这两条最容易被漏掉。</li>
+</ol>
+<h3 id="实验1–栈变化实例演示："><a href="#实验1–栈变化实例演示：" class="headerlink" title="实验1–栈变化实例演示："></a>实验1–栈变化实例演示：</h3><p>想要知道栈真正的入栈出栈情况，需要紧盯esp（rsp）的变化，结合hellloworld程序进行栈模拟。记住此时esp地址是0x1AFF74。<br><img src="/img/image-249.png"><br><img src="/img/image-250.png"><br>1.push ebp  压入栈帧     ESP-8&#x3D;0x1AFF6C<br><img src="/img/image-251.png"><br>2.push ebx     入栈  ESP-8&#x3D;0x1AFF64<br><img src="/img/image-252.png"><br>3.push edi  入栈  ESP-8&#x3D;0x1AFF5C<br><img src="/img/image-253.png"><br>4.push esi     入栈  ESP-8&#x3D;0x1AFF54<br><img src="/img/image-254.png"><br>5.push eax  入栈  ESP-8&#x3D;0x1AFF4C<br><img src="/img/image-255.png"><br>6.push eax   入栈  ESP-8&#x3D;0x1AFF44<br><img src="/img/image-256.png"><br>7.pop esi  出栈   ESP+8&#x3D;0x1AFF5C<br>这里特殊的是在esi出栈前eax就已经出栈过了，因为eax是易失性寄存器API 读取参数后API 内部自动把参数出栈（清理掉），或者由后续的 add esp, X 清理。<br><img src="/img/image-257.png"><br>8.pop edi   出栈   ESP+8&#x3D;0x1AFF64<br><img src="/img/image-258.png"><br>9.pop ebx   出栈   ESP+8&#x3D;0x1AFF6C<br><img src="/img/image-259.png"></p>
+<h2 id="栈帧："><a href="#栈帧：" class="headerlink" title="栈帧："></a>栈帧：</h2><p>利用EBP（这是栈帧指针）寄存器访问栈内局部变量，参数，函数返回地址等手段。调用某函数时，要先把用作基准点（函数起始地址）的ESP值保存到EBP中，并维持在函数内部。</p>
+<p>相当于，对起始地址的状态进行一个存档。使程序能够安全访问到相关函数的局部变量，参数，返回地址。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">; 代码7-1 栈帧结构</span><br><span class="line">PUSH EBP          ; 函数开始（使用EBP前先把已有值保存到栈中）</span><br><span class="line">MOV EBP, ESP      ; 保存当前ESP到EBP中</span><br><span class="line"></span><br><span class="line">...               ; 函数体</span><br><span class="line">                  ; 无论ESP值如何变化，EBP都保持不变，可以安全访问函数的局部变量、参数</span><br><span class="line"></span><br><span class="line">MOV ESP, EBP      ; 将函数的起始地址返回到ESP中</span><br><span class="line">POP EBP           ; 函数返回前弹出保存在栈中的EBP值</span><br><span class="line">RETN              ; 函数终止</span><br></pre></td></tr></table></figure>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p>原始代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//StackFrame.exe</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">long</span> <span class="title function_">add</span><span class="params">(<span class="type">long</span> a,<span class="type">long</span> b)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">long</span> x = a, y = b;</span><br><span class="line">    <span class="keyword">return</span> x + y;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span>* argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">long</span> a = <span class="number">1</span>, b = <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%d\n&quot;</span>,add(a,b));</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/img/image-260.png"><br>执行mov ebp,esp后，栈空间大致如下<br><img src="/img/image-261.png"><br>EBP从始至终值不变，形成记录main（）函数栈帧</p>
+<h2 id="实验2–完整线程栈上活动分析"><a href="#实验2–完整线程栈上活动分析" class="headerlink" title="实验2–完整线程栈上活动分析"></a>实验2–完整线程栈上活动分析</h2><p>我们现在再来分析一个线程栈上的活动体会一下:</p>
+<h3 id="设置局部变量"><a href="#设置局部变量" class="headerlink" title="设置局部变量"></a>设置局部变量</h3><p>变量声明和变量的赋值：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">long a =<span class="number">1</span>,b=<span class="number">2</span>;</span><br><span class="line">00401023 SUB ESP,<span class="number">8</span></span><br></pre></td></tr></table></figure>
+<p>减法指令，对栈指针地址减去8字节。为函数局部变量开辟空间，以便保存变量。因为都是long类型，每个是四字节，两个一共需要8字节。开辟空间后，无论ESP值怎样变化，ab变量的栈空间都不会被影响。<br>定义变量：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV DWORD PTR SS:[EBP-4],1  ;[EBP-4]=local &#x27;a&#x27;</span><br><span class="line">MOV DWORD PTR SS:[EBP-8],2  ;[EBP-8]=local &#x27;b&#x27;</span><br></pre></td></tr></table></figure>
+<h3 id="add-函数参数传递和调用"><a href="#add-函数参数传递和调用" class="headerlink" title="add()函数参数传递和调用"></a>add()函数参数传递和调用</h3><p>先把参数压入栈，再调用函数，入栈顺序为逆向，因此先入栈的后调用，后入栈的先调用<br>printf(“%d\n”,add(a,b));</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MOV EAX,DWORD PTR SS:[EBP-8]  ;[EBP-8]=b</span><br><span class="line">PUSH EAX  ;ARG2=00000002</span><br><span class="line">MOV ECX,DWORD PTR SS:[EBP-4]  ;[EBP-4]=a</span><br><span class="line">PUSH ECX  ;ARG1=00000001</span><br><span class="line">CALL 00401000  ;add（）</span><br></pre></td></tr></table></figure>
+<h3 id="开始执行add函数并生成栈帧："><a href="#开始执行add函数并生成栈帧：" class="headerlink" title="开始执行add函数并生成栈帧："></a>开始执行add函数并生成栈帧：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PUSH EBP</span><br><span class="line">MOV EBP,ESP</span><br></pre></td></tr></table></figure>
+<p>所以，其实每个函数被调用的时候，都会先生成栈帧，EBP始终不变。ESP随着函数内指令运行变化。</p>
+<h3 id="设置add函数的局部变量"><a href="#设置add函数的局部变量" class="headerlink" title="设置add函数的局部变量"></a>设置add函数的局部变量</h3><p>局部变量：xy–形式参数：ab<br>这里第一行代码，是为xy开辟空间。而a,b已经在传参时开辟过空间。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SUB ESP,8</span><br><span class="line">MOV EAX,DWORD PTR SS:[EBP+8]  ;[EBP+8]=param a</span><br><span class="line">MOV DWORD PTR SS:[EBP-8],EAX  ;[EBP-8]=local x</span><br><span class="line">MOV ECX,DWORD PTR SS:[EBP+C]  ;[EBP+C]=param b</span><br><span class="line">MOV DWORD PTR SS:[EBP-C],ECX  ;[EBP-C]=local y</span><br></pre></td></tr></table></figure>
+<p>在这里，使用ax和cx寄存器中转数据，这两个寄存器是随机的，只要是通用寄存器都可以。C和8是十六进制中差4的数字。</p>
+<h3 id="ADD运算"><a href="#ADD运算" class="headerlink" title="ADD运算"></a>ADD运算</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MOV EAX,DWORD PTR SS:[EBP-8]  ;[EBP-8]=local x</span><br><span class="line">ADD EAX,DWORD PTR SS:[EBP-4]  ;[EBP-4]=local y</span><br></pre></td></tr></table></figure>
+<p>先将x数据传输到eax中，再把两个数相加后储存到eax中.</p>
+<h3 id="删除函数add栈帧，函数执行完毕"><a href="#删除函数add栈帧，函数执行完毕" class="headerlink" title="删除函数add栈帧，函数执行完毕"></a>删除函数add栈帧，函数执行完毕</h3><p>先传输，恢复ESP的值，然后出栈就结束对函数的调用了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MOV ESP,EBP</span><br><span class="line">POP EBP</span><br><span class="line">RETN</span><br></pre></td></tr></table></figure>
+<h3 id="从栈中删除函数add的参数"><a href="#从栈中删除函数add的参数" class="headerlink" title="从栈中删除函数add的参数"></a>从栈中删除函数add的参数</h3><p>移动栈指针，清理之前的参数。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ADD ESP,8</span><br></pre></td></tr></table></figure>
+<h3 id="调用printf函数"><a href="#调用printf函数" class="headerlink" title="调用printf函数"></a>调用printf函数</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PUSH EAX       ;函数add返回值</span><br><span class="line">PUSH 0040B384  ；“%d\n”</span><br><span class="line">CALL 00401067  ；printf（）</span><br><span class="line">ADD ESP,8      ；恢复栈指针</span><br></pre></td></tr></table></figure>
+<h3 id="删除栈帧main"><a href="#删除栈帧main" class="headerlink" title="删除栈帧main"></a>删除栈帧main</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MOV ESP,ESP</span><br><span class="line">POP EBP</span><br><span class="line">RETN</span><br></pre></td></tr></table></figure>
+<p>栈这篇就到这里了，总结一下堆栈就是一块“后进先出”的内存区域，程序用它来临时存放数据、传递参数和记住函数调用后的返回地址。栈堆对于二进制的学习者来讲是必须要熟悉的一环，只有完全吃透了堆栈，你才能在调试器中，看着ESP、EBP跳动，真正读懂二进制的语言。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/">https://saoirse.github.io/2026/09/27/栈和栈帧/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91/">逆向</a><a class="post-meta__tags" href="/tags/%E3%80%8A%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86%E3%80%8B/">《逆向工程核心原理》</a></div><div class="post-share"><div class="social-share" data-image="/img/2026-09-27_182622_094.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/09/27/PE2/" title="PE文件格式[2]"><img class="cover" src="/img/2026-09-27_182622_094.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">PE文件格式[2]</div></div><div class="info-2"><div class="info-item-1"> 进入到PE文件格式的第二篇，本篇重点IAT。  IAT–导入地址表IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。 IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL（模块），并填充所需函数的地址。2.IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT 叫做绑定导入表，在第一种导入表导入地址的修正是在PE加载时完成，如果一个PE文件导入的DLL或者函数多那么加载起来就会略显的慢一些，所以出现了绑定导入，在加载以前就修正了导入表，这样就会快一些。3.IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT 叫做延迟导入表，一个PE文件也许提供了很多功能，也导入了很多其他DLL，但是并非每次加载都会用到它提供的所有功能，也不一定会用到它需要导入的所有DLL，因此延迟导入就出现了，只有在一个PE文件真正用到需要的DLL，这个...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/09/27/PE2/" title="PE文件格式[2]"><img class="cover" src="/img/2026-09-27_182622_094.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-27</div><div class="info-item-2">PE文件格式[2]</div></div><div class="info-2"><div class="info-item-1"> 进入到PE文件格式的第二篇，本篇重点IAT。  IAT–导入地址表IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。 IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL（模块），并填充所需函数的地址。2.IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT 叫做绑定导入表，在第一种导入表导入地址的修正是在PE加载时完成，如果一个PE文件导入的DLL或者函数多那么加载起来就会略显的慢一些，所以出现了绑定导入，在加载以前就修正了导入表，这样就会快一些。3.IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT 叫做延迟导入表，一个PE文件也许提供了很多功能，也导入了很多其他DLL，但是并非每次加载都会用到它提供的所有功能，也不一定会用到它需要导入的所有DLL，因此延迟导入就出现了，只有在一个PE文件真正用到需要的DLL，这个...</div></div></div></a><a class="pagination-related" href="/2026/09/27/PE/" title="PE文件格式[1]"><img class="cover" src="/img/2026-09-27_101411_363.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-27</div><div class="info-item-2">PE文件格式[1]</div></div><div class="info-2"><div class="info-item-1"> 本篇主要讲解PE文件部分内容，IAT和EAT等-请翻阅PE文件格式【2】。PE文件是Windows系统中可执行文件格式，有exe,scr（可执行）,dll,ocx,cpl,drv（库）。想要在文件中打补丁或者修改程序硬编码，都需要对文件标志有所了解，甚至可以说是最好达到熟悉的程度PE文件包括DOS部分、PE文件头和节表和节数据。从DOS头（DOS header ）到节区头（Sectionheader）是PE头部分，其下的节区合称PE体。节数据包括代码（.text）、数据（.data）、资源（.rsrc）节，分别保存。  重要结构体：PEview看PE文件结构体如下： VA&amp;RVAVA指的是，进程虚拟内存的绝对地址，RVA指的是从某个基准位置开始的相对地址。二者之间有一定的相互转换关系RVA+ImageBase&#x3D;VA[其中ImageBase表示基准]VA是程序运行时真正访问的地址，RVA是PE文件内部记录地址的方式。 DOS头作用总结：标识文件类型，定位PE头。作为PE文件的文件标志。IMAGE_DOS_HEADER  (MZ文件头 0x40) 12345678...</div></div></div></a><a class="pagination-related" href="/2026/07/01/SMC/" title="SMC"><img class="cover" src="/img/20260702160038_24_130.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-01</div><div class="info-item-2">SMC</div></div><div class="info-2"><div class="info-item-1">SMC混淆SMC混淆是一种自修改代码技术，通过在程序运行时动态解密加密的代码段，防止静态分析和逆向工程。 123456IF .运行条件满足  CALL DecryptProc （Address of MyProc）;对某个函数代码解密  ........  CALL MyProc                           ;调用这个函数  ........  CALL EncryptProc （Address of MyProc）;再对代码进行加密，防止程序被Dump SMC混淆原理：SMC最直接的方式是通过修改PE文件的数据段和代码段来进行混淆，或者通过修改PE文件的Section Header,搭配使用API Hook实现代码加密和解密，同时会在加密过程中使用VMProtect等第三方加密工具。因此在SMC中存在标志函数：VirtualProtect（），并且SMC中还会出现代码爆红现象，跟踪到汇编代码就能看到爆红部分是大片的数据，如下图所示。 反混淆方式大多数题目在代码中都是能够找到SMC加密逻辑的，只不过有的可能在反编译的时候就能看到，有的只能在汇编看到。只要能...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img class="cover" src="/img/CTFnixiang.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">加密算法</div></div><div class="info-2"><div class="info-item-1">正好赶上复习，那我们一起重走来时路吧~  加密算法篇BASE家族base64base64加密原理：base64加密本质是一种编码形式，数据以一种二进制文本的形式传递，编码过程分为三步1.将ASCII转换为对应的八位二进制数据2.合并起来，再以6位一组重新分配3.六位值映射到base64字符表位数不足时，在末尾补0，直至补齐组内位数 特征识别：● 字符串编码表识别● 加密填充符识别（一般为&#x3D;号）● bit：3 * 8变4 * 6● 输入参数会被移位拼接，移位位数为 2、4、6位，将3字节拆成4字节● 理解编码原理，编码时通常都会用3个字节一组来处理比特位数据，这些特征都可以用来分析识别。常规魔改：编码表（TLS、SMC等各种反调试位置） 对base64的编码实现：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081//定义...</div></div></div></a><a class="pagination-related" href="/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/" title="黄鹤杯2026初赛 - RE.WP"><img class="cover" src="/img/20260811082018_15_21.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-11</div><div class="info-item-2">黄鹤杯2026初赛 - RE.WP</div></div><div class="info-2"><div class="info-item-1">最近暑假比赛超多，我的题库一下子厚了不少。今天复现黄鹤杯，这是我们打进线下的第一个外省比赛，可以公费去武汉了，开心^^先说说整体的比赛感受吧，比赛的题目还是比较有意思的，考的知识很大众但考题方式很小众，也是也不能说小众，就是题目思路特别绕，还是很有复现价值的。赛制也比较刺激，赛时不长比较人性化，最后一小时黑灯赛玩的是个心理战，最后也是让我们稳稳进了。不过反思线上赛，认为个人作为逆向手还是有点掉链子的orz… 春风栈桥-HHB2026查壳，有壳，UPX先脱壳 1upx -d &quot;C:\Users\ASUS\Desktop\春风栈桥\challenge&quot; 放入ida，F5分析主函数：能够确定的是函数头是flag{}，并且flag长度为125。整体看过去，发现有两个check的函数，挨个查看：**stage1_check：**根据代码分析得出以下分析结果。结合主函数，认为该函数是辅助做flag头固定值检测的校验函数。**stage3_check：**根据代码分析得出以下结果，结合主函数认为该函数是结果校验函数，对特定位置的字符做校验。这里已经找到目标字符串，但回看主函...</div></div></div></a><a class="pagination-related" href="/2026/07/04/UPX%E8%84%B1%E5%A3%B3/" title="UPX脱壳"><img class="cover" src="/img/20260704173342_3_109.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-07-04</div><div class="info-item-2">UPX脱壳</div></div><div class="info-2"><div class="info-item-1">壳什么是壳呢？壳大多分为两类：压缩壳和加密壳。 压缩壳压缩壳早在 DOS 时代就已经出现，压缩壳可以帮助缩减 PE 文件的大小，隐藏PE文件内部代码和资源，便于传输和保存。压缩壳一种用于单纯的压缩普通PE文件，另一种则会对文件造成较大的改变，严重破坏PE文件头，用于压缩恶意程序。常见的压缩壳有：Upx、ASpack、PECompat加密壳加密壳也称保护壳，应用有多种防止代码逆向分析的技术，主要的功能是保护 PE 免受代码逆向分析。加密壳保护的 PE 程序通常比原文件大得多。目前加密壳大量用于对安全性要求高，对破解敏感的应用程序，同时也有恶意程序用于避免（降低）杀毒软件的检测查杀。 常见的加密壳有：ASProtector、Armadillo、EXECryptor、Themida、VMProtect壳加载的过程：保存入口参数：保持栈平衡，壳运行前后要保持寄存器值不变获取程序API： 一般壳的输入表中只有 GetProcAddress、GetModuleHandle 和 LoadLibrary 这几个 API 函数 如果需要其他 API 函数，则通过 LoadLibraryA(W) 或...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学那个名叫逆向的魔法，咒语是debug,hook......</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">26</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新，请大佬们多多指教Orz! 很多内容是很久以前写下的笔记，参考一些大佬文章忘记记录网址，如有侵权，请联系我，我愿配合一切合理处理行为，感谢各位网络恩师^^</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">栈的作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E6%8C%87%E9%92%88%E5%8F%98%E5%8C%96%E8%A7%84%E5%BE%8B%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">栈指针变化规律：</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C1%E2%80%93%E6%A0%88%E5%8F%98%E5%8C%96%E5%AE%9E%E4%BE%8B%E6%BC%94%E7%A4%BA%EF%BC%9A"><span class="toc-number">2.1.</span> <span class="toc-text">实验1–栈变化实例演示：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%88%E5%B8%A7%EF%BC%9A"><span class="toc-number">3.</span> <span class="toc-text">栈帧：</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E8%AF%95"><span class="toc-number">3.1.</span> <span class="toc-text">调试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C2%E2%80%93%E5%AE%8C%E6%95%B4%E7%BA%BF%E7%A8%8B%E6%A0%88%E4%B8%8A%E6%B4%BB%E5%8A%A8%E5%88%86%E6%9E%90"><span class="toc-number">4.</span> <span class="toc-text">实验2–完整线程栈上活动分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F"><span class="toc-number">4.1.</span> <span class="toc-text">设置局部变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#add-%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92%E5%92%8C%E8%B0%83%E7%94%A8"><span class="toc-number">4.2.</span> <span class="toc-text">add()函数参数传递和调用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E5%A7%8B%E6%89%A7%E8%A1%8Cadd%E5%87%BD%E6%95%B0%E5%B9%B6%E7%94%9F%E6%88%90%E6%A0%88%E5%B8%A7%EF%BC%9A"><span class="toc-number">4.3.</span> <span class="toc-text">开始执行add函数并生成栈帧：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AEadd%E5%87%BD%E6%95%B0%E7%9A%84%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F"><span class="toc-number">4.4.</span> <span class="toc-text">设置add函数的局部变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ADD%E8%BF%90%E7%AE%97"><span class="toc-number">4.5.</span> <span class="toc-text">ADD运算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E5%87%BD%E6%95%B0add%E6%A0%88%E5%B8%A7%EF%BC%8C%E5%87%BD%E6%95%B0%E6%89%A7%E8%A1%8C%E5%AE%8C%E6%AF%95"><span class="toc-number">4.6.</span> <span class="toc-text">删除函数add栈帧，函数执行完毕</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E6%A0%88%E4%B8%AD%E5%88%A0%E9%99%A4%E5%87%BD%E6%95%B0add%E7%9A%84%E5%8F%82%E6%95%B0"><span class="toc-number">4.7.</span> <span class="toc-text">从栈中删除函数add的参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E7%94%A8printf%E5%87%BD%E6%95%B0"><span class="toc-number">4.8.</span> <span class="toc-text">调用printf函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E6%A0%88%E5%B8%A7main"><span class="toc-number">4.9.</span> <span class="toc-text">删除栈帧main</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧"><img src="/img/2026-09-27_182622_094.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="栈和栈帧"/></a><div class="content"><a class="title" href="/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧">栈和栈帧</a><time datetime="2026-09-27T11:41:42.000Z" title="发表于 2026-09-27 19:41:42">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE2/" title="PE文件格式[2]"><img src="/img/2026-09-27_182622_094.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE文件格式[2]"/></a><div class="content"><a class="title" href="/2026/09/27/PE2/" title="PE文件格式[2]">PE文件格式[2]</a><time datetime="2026-09-27T09:08:54.000Z" title="发表于 2026-09-27 17:08:54">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE/" title="PE文件格式[1]"><img src="/img/2026-09-27_101411_363.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE文件格式[1]"/></a><div class="content"><a class="title" href="/2026/09/27/PE/" title="PE文件格式[1]">PE文件格式[1]</a><time datetime="2026-09-27T02:04:48.000Z" title="发表于 2026-09-27 10:04:48">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/26/HOOK-1/" title="HOOK--初识"><img src="/img/20260926174600_10_58.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="HOOK--初识"/></a><div class="content"><a class="title" href="/2026/09/26/HOOK-1/" title="HOOK--初识">HOOK--初识</a><time datetime="2026-09-26T09:13:43.000Z" title="发表于 2026-09-26 17:13:43">2026-09-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/21/VMP%E7%B1%BB%E5%9E%8B/" title="VMP壳--初识"><img src="/img/20260926174757_12_58.png" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="VMP壳--初识"/></a><div class="content"><a class="title" href="/2026/09/21/VMP%E7%B1%BB%E5%9E%8B/" title="VMP壳--初识">VMP壳--初识</a><time datetime="2026-09-21T09:48:22.000Z" title="发表于 2026-09-21 17:48:22">2026-09-21</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
