@@ -1,0 +1,268 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Activity漏洞-1.0 | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Activity漏洞有很多种：Activity组件导出不当导致的信息泄露或拒绝服务，StrandHogg攻击（任务劫持），Intent重定向与混淆代理攻击，后台Activity启动滥用。在Android版本升级的过程中已经慢慢被修复一些，Android 9修复StrandHogg攻击；Android 12要求强制显式声明android:exported，适当避免了一些组件被泄露的问题；Androi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Activity漏洞-1.0">
+<meta property="og:url" content="https://saoirse.github.io/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="Activity漏洞有很多种：Activity组件导出不当导致的信息泄露或拒绝服务，StrandHogg攻击（任务劫持），Intent重定向与混淆代理攻击，后台Activity启动滥用。在Android版本升级的过程中已经慢慢被修复一些，Android 9修复StrandHogg攻击；Android 12要求强制显式声明android:exported，适当避免了一些组件被泄露的问题；Androi">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/20260926174600_10_58.jpg">
+<meta property="article:published_time" content="2026-10-20T11:03:04.000Z">
+<meta property="article:modified_time" content="2026-10-20T15:41:49.429Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="Android逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/20260926174600_10_58.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Activity漏洞-1.0",
+  "url": "https://saoirse.github.io/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/",
+  "image": "https://saoirse.github.io/img/20260926174600_10_58.jpg",
+  "datePublished": "2026-10-20T11:03:04.000Z",
+  "dateModified": "2026-10-20T15:41:49.429Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Activity漏洞-1.0',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/new_background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">27</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/20260926174601_11_58.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Activity漏洞-1.0</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Activity漏洞-1.0</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-20T11:03:04.000Z" title="发表于 2026-10-20 19:03:04">2026-10-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-20T15:41:49.429Z" title="更新于 2026-10-20 23:41:49">2026-10-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Android/">Android</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>Activity漏洞有很多种：Activity组件导出不当导致的信息泄露或拒绝服务，StrandHogg攻击（任务劫持），Intent重定向与混淆代理攻击，后台Activity启动滥用。在Android版本升级的过程中已经慢慢被修复一些，Android 9修复StrandHogg攻击；Android 12要求强制显式声明android:exported，适当避免了一些组件被泄露的问题；Android 4.2修改了Content Provider的默认导出行为。因此一部分漏洞几乎很少见了，本篇只介绍Activity组件导出导致的信息泄露或拒绝服务类型的漏洞。</p>
+<h2 id="相关知识回顾"><a href="#相关知识回顾" class="headerlink" title="相关知识回顾"></a>相关知识回顾</h2><p>Activity作为四大组件之一，负责用户交互，通俗的说就是一个页面就是一个Activity。我们需要知道Android 是用栈来管理 Activity，利用Intent传值，这里围绕Activity组件一起回顾。<br>首先是Activity组件的生命周期，类中定义了七个回调方法：<br><strong>onCreate() → onStart() → onResume() → onPause() → onStop() → onDestroy()</strong><br>其次是Activty的启动模式：<br>standard模式：默认模式每次启动新建实例压栈<br>singleTop：栈顶复用模式，如果要启动的Activity在栈顶存在，则调用onNewIntent()方法。<br>singleTask：栈内复用模式，activity只会在任务栈里面存在一个实例。<br>singleInstance：单一实例模式，整个手机操作系统里面只有一个实例存在。<br>最后还有传值机制：<br>无论是各个Activity之间交互还是与其他组件之间交互都是由Intent完成。Intent是一个可序列化的数据结构，一般用于启动Activity、Service、发送广播。分为显示和隐式。</p>
+<h2 id="越权绕过漏洞"><a href="#越权绕过漏洞" class="headerlink" title="越权绕过漏洞"></a>越权绕过漏洞</h2><p>Activity越权漏洞的本质是，把需要限制权限访问的页面暴露在了外面；攻击方式为直接从外部调用Activity，进入到被暴露的页面。</p>
+<h3 id="主要特征："><a href="#主要特征：" class="headerlink" title="主要特征："></a>主要特征：</h3><ol>
+<li>隐式导出：有intent-filter标签但没有写明确的android:exported&#x3D;”false”默认允许被外部应用启动<br><img src="/img/image-262.png"><br>2.显式导出：声明android:exported&#x3D;”true”<br><img src="/img/image-263.png"><br>3.若在隐式或显式导出的基础上有android:permission保护，那么只有持有相应权限的应用能够启动，可能存在漏洞威胁</li>
+</ol>
+<h3 id="样本漏洞复现："><a href="#样本漏洞复现：" class="headerlink" title="样本漏洞复现："></a>样本漏洞复现：</h3><p>先运行一下sieve.apk看看是什么东西；目前来看首先有登录页面进去之后可以创建保存密码<br><img src="/img/image-265.png"></p>
+<h4 id="攻击"><a href="#攻击" class="headerlink" title="攻击"></a>攻击</h4><p>审计AndroiManifest.xml中包声明，发现：<br><strong>com.mwr.example.sieve.FileSelectActivity包：</strong><br>定义标签属性android:exported&#x3D;”true”，显示导出<br><img src="/img/image-264.png"><br><strong>com.mwr.example.sieve.MainLoginActivity包:</strong><br>带有<intent-filter>标签但未被声明android:exported&#x3D;”false”默认为能够被访问,隐式导出<br><img src="/img/image-266.png"><br><strong>com.mwr.example.sieve.PWList包：</strong><br>从名字分析是密码列表页面，应该是登录后才能看到的敏感信息页面；这里声明android:exported&#x3D;”true”，显示导出<br><img src="/img/image-267.png"><br>现在通过审计AndroiManifest.xml文件，我们发现有三个包存在泄露风险，不过体是否涉及越权就要仔细看看这个包的作用了。拉起模拟器的真机设备，用drozer工具验证一下：<br>执行 run app.package.list 【枚举设备已安装应用包】<br><img src="/img/image-268.png"><br>执行 run app.package.attacksurface com.mwr.example.sieve【利用drozer的攻击模块扫描目标应用com.mwr.example.sieve<br><img src="/img/image-269.png"><br>执行  run app.activity.info -a  com.mwr.example.sieve 【利用drozer用于获取Activity信息的模块，列出目标应用所有已导出的 Activity，并显示与它们交互所需的权限】<br><img src="/img/image-270.png"><br>执行 adb shell am start -n com.mwr.example.sieve&#x2F;.PWList 实现越权跳转<br><img src="/img/image-271.png"><br>其余两个包也尝试攻击实现跳转，FileSelectActivity跳转进入文件目录，MainLoginActivity即为登录界面。因此危害最大的应为PWList和FileSelectActivity。</p>
+<h4 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h4><p>反编译解包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar apktool.jar d sieve.apk -o sieve_decoded</span><br></pre></td></tr></table></figure>
+<p>修复思路：修改AndroiManifest.xml文件中声明标签，android:exported&#x3D;”true”，防止外部应用直接调用组件。<br><img src="/img/image-272.png"><br>修改后打包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar apktool.jar b sieve_decoded -o sieve_patched.apk</span><br></pre></td></tr></table></figure>
+<p>当然仅仅打包还是无法安装这个程序的，还需要对修改过的apk文件进行签名。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;D:\Android_SDK\build-tools\34.0.0\apksigner.bat&quot;</span> sign --ks %USERPROFILE%\.android\debug.keystore --ks-pass pass:android --key-pass pass:android D:\ctf\apktools\sieve_patched.apk</span><br></pre></td></tr></table></figure>
+<p>签名验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;D:\Android_SDK\build-tools\34.0.0\apksigner.bat&quot;</span> verify -v D:\ctf\apktools\sieve_patched.apk</span><br></pre></td></tr></table></figure>
+<p>再次攻击验证防护成功!<br><img src="/img/image-273.png"></p>
+<h2 id="拒绝服务漏洞"><a href="#拒绝服务漏洞" class="headerlink" title="拒绝服务漏洞"></a>拒绝服务漏洞</h2><p>此拒绝服务非彼拒绝服务，这里指的是拒绝本地服务，也就是APP被攻击后遭到了破坏，应用出现卡死或者闪退等。</p>
+<h3 id="漏洞原理："><a href="#漏洞原理：" class="headerlink" title="漏洞原理："></a>漏洞原理：</h3><p>攻击者向一个导出的Activity组件发送精心构造的畸形的、空的或恶意Intent数据，而该 Activity在onCreate()或onStart()等生命周期回调中通过getIntent()获取数据时，如果没有做空值判断、类型检查或异常捕获，就会导致应用抛出未捕获异常并崩溃。</p>
+<h3 id="漏洞触发条件："><a href="#漏洞触发条件：" class="headerlink" title="漏洞触发条件："></a>漏洞触发条件：</h3><p>1.组件可被外部访问（导出，或导出且有权限但攻击者持有该权限）<br>2.代码对 Intent 数据未做空值&#x2F;类型&#x2F;边界校验，且未捕获异常<br><strong>常见数据类型</strong><br>1.空数据或Action:<br>程序直接调用 getAction()或对Extra数据取值后立即使用，没有判断是否为null。攻击者发送一个不携带 Action或特定Extra的Intent，就会触发NullPointerException。<br>2.类型转换异常:<br>组件使用getSerializableExtra()获取数据后，直接强制转换成预期类型。如果攻击者传入一个不同类型或伪造类型的Serializable对象，就会触发ClassCastException。<br>3.无法反序列化的类对象:<br>攻击者传入一个自定义的序列化对象，但目标应用中并不存在该类的定义。组件在尝试反序列化时，会抛出 ClassNotFoundException导致崩溃。<br>4.数组越界数据:<br>组件通过 getIntegerArrayListExtra() 等方法获取数组后，直接按固定索引访问元素，而未检查数组的实际大小。传入空数组或元素不足的数组就会触发 IndexOutOfBoundsException。</p>
+<h3 id="样本漏洞复现"><a href="#样本漏洞复现" class="headerlink" title="样本漏洞复现"></a>样本漏洞复现</h3><p>如上审计AndroiManifest.xml代码结果，三个组件存在被泄露风险。现明确查找拒绝服务漏洞，已知漏洞原理在于数据传输异常无法处理，取巧搜索getIntent和getStringExtra方法，最终发现OnCreate事件中出现，数据传输且未检测空值异常语句<br><img src="/img/image-274.png"><br>也就是getIntent().getStringExtra(“com.mwr.example.sieve.PIN”).length()作为漏洞点</p>
+<h4 id="攻击-1"><a href="#攻击-1" class="headerlink" title="攻击"></a>攻击</h4><p>构造payload造成程序崩溃，强制退出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb shell am start -n com.mwr.example.sieve/com.mwr.example.sieve.MainLoginActivity --es com.mwr.example.sieve.DOS 1</span><br></pre></td></tr></table></figure>
+<p>payload构造思路：<br>1.由于MainLoginActivity可直接被外部调用，因此构造命令“am start -n com.mwr.example.sieve&#x2F;com.mwr.example.sieve.MainLoginActivity”通过adb向MainLoginActivity直接传递Intent<br>2.构造“–es com.mwr.example.sieve.DOS 1”以String类型放入Extra：Key &#x3D; DOS，Value &#x3D; “1”<br>3.无“–es com.mwr.example.sieve.PIN”，向com.mwr.example.sieve.PIN传递一个空值，使.length()抛出异常。<br><strong>tips:不过验证漏洞前需要执行  adb shell am force-stop com.mwr.example.sieve  避免由于MainLoginActivity的启动模式二次攻击时无法稳定执行onCreate造成应用崩溃</strong><br><img src="/img/image-275.png"><br>最终程序闪退，漏洞得到验证。</p>
+<h4 id="修复-1"><a href="#修复-1" class="headerlink" title="修复"></a>修复</h4><p>该样本漏洞最简单的修复思路即，对Intent的值进行边界校验即可防护；当然如果加上try-catch异常处理机制做处理更好</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (getIntent().getStringExtra(<span class="string">&quot;com.mwr.example.sieve.DOS&quot;</span>) != null) &#123;</span><br><span class="line">    String pin = getIntent().getStringExtra(<span class="string">&quot;com.mwr.example.sieve.PIN&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (pin != null) &#123;</span><br><span class="line">        pin.length();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>防护后再次攻击验证，命令执行成功但应用程序已经不会强制退出，且调出日志查看明确本次攻击未出现 FATAL EXCEPTION和NullPointerException堆栈，说明最起码防住了我们自己之前的payload^^。<br><img src="/img/image-276.png"></p>
+<p>好了，因为分享会先把后面这篇Android的发出来了。其实PC端的还没更新完，逆向工程原理篇也没更新完，懒O_O，最近也是玩疯了，广州回来，重庆玩，重庆回来又借着比赛回家了，紧赶慢赶算是把这篇写完更新出来，就这样吧三页便签的待办我学……</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/">https://saoirse.github.io/2026/10/20/Activity漏洞/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Android%E9%80%86%E5%90%91/">Android逆向</a></div><div class="post-share"><div class="social-share" data-image="/img/20260926174600_10_58.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧"><img class="cover" src="/img/2026-09-27_182622_094.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">栈和栈帧</div></div><div class="info-2"><div class="info-item-1">栈应于存储局部变量，传递函数参数，保存函数返回地址。调试程序应该不断观察栈内存。在逆向的时候我们经常说到的bp，sp都和栈有关，汇编语言表达栈段为寄存器SS，SP在汇编中则表示栈顶在段内的偏移。 栈的作用1.暂时保护函数内的局部变量2.调用函数时传递参数3.保存函数返回后的地址ESP为栈顶指针，初始在栈底(高地址)，PUSH使ESP自减移到栈顶方向。 栈指针变化规律：栈指针随着压栈出栈的数据移动，入栈时栈指针地址减少，出栈时栈指针地址增加。栈顶地址小于栈底地址。判断方法  看助记符，判断属于哪类：  ○ push &#x2F; call → 入栈  ○ pop &#x2F; ret → 出栈  ○ sub esp, N → 分配（栈顶下降）  ○ add esp, N &#x2F; mov esp, ebp &#x2F; leave → 回收（栈顶上升）  ○ 其余 → 一般不动 ESP 改 ESP：  ○ x86：每次 ±4  ○ x64：每次 ±8 写&#x2F;读栈内存（只有 push&#x2F;pop&#x2F;call&#x2F;ret 才真正读写栈内容；sub esp...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学那个名叫逆向的魔法，咒语是debug,hook......</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">27</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">10</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新，请大佬们多多指教Orz! 很多内容是很久以前写下的笔记，参考一些大佬文章忘记记录网址，如有侵权，请联系我，我愿配合一切合理处理行为，感谢各位网络恩师^^</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86%E5%9B%9E%E9%A1%BE"><span class="toc-number">1.</span> <span class="toc-text">相关知识回顾</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B6%8A%E6%9D%83%E7%BB%95%E8%BF%87%E6%BC%8F%E6%B4%9E"><span class="toc-number">2.</span> <span class="toc-text">越权绕过漏洞</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E8%A6%81%E7%89%B9%E5%BE%81%EF%BC%9A"><span class="toc-number">2.1.</span> <span class="toc-text">主要特征：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B7%E6%9C%AC%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%EF%BC%9A"><span class="toc-number">2.2.</span> <span class="toc-text">样本漏洞复现：</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%BB%E5%87%BB"><span class="toc-number">2.2.1.</span> <span class="toc-text">攻击</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D"><span class="toc-number">2.2.2.</span> <span class="toc-text">修复</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8B%92%E7%BB%9D%E6%9C%8D%E5%8A%A1%E6%BC%8F%E6%B4%9E"><span class="toc-number">3.</span> <span class="toc-text">拒绝服务漏洞</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86%EF%BC%9A"><span class="toc-number">3.1.</span> <span class="toc-text">漏洞原理：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E8%A7%A6%E5%8F%91%E6%9D%A1%E4%BB%B6%EF%BC%9A"><span class="toc-number">3.2.</span> <span class="toc-text">漏洞触发条件：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B7%E6%9C%AC%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0"><span class="toc-number">3.3.</span> <span class="toc-text">样本漏洞复现</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%94%BB%E5%87%BB-1"><span class="toc-number">3.3.1.</span> <span class="toc-text">攻击</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D-1"><span class="toc-number">3.3.2.</span> <span class="toc-text">修复</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/" title="Activity漏洞-1.0"><img src="/img/20260926174600_10_58.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="Activity漏洞-1.0"/></a><div class="content"><a class="title" href="/2026/10/20/Activity%E6%BC%8F%E6%B4%9E/" title="Activity漏洞-1.0">Activity漏洞-1.0</a><time datetime="2026-10-20T11:03:04.000Z" title="发表于 2026-10-20 19:03:04">2026-10-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧"><img src="/img/2026-09-27_182622_094.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="栈和栈帧"/></a><div class="content"><a class="title" href="/2026/09/27/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧">栈和栈帧</a><time datetime="2026-09-27T11:41:42.000Z" title="发表于 2026-09-27 19:41:42">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE2/" title="PE文件格式[2]"><img src="/img/2026-09-27_182622_094.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE文件格式[2]"/></a><div class="content"><a class="title" href="/2026/09/27/PE2/" title="PE文件格式[2]">PE文件格式[2]</a><time datetime="2026-09-27T09:08:54.000Z" title="发表于 2026-09-27 17:08:54">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/27/PE/" title="PE文件格式[1]"><img src="/img/2026-09-27_101411_363.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="PE文件格式[1]"/></a><div class="content"><a class="title" href="/2026/09/27/PE/" title="PE文件格式[1]">PE文件格式[1]</a><time datetime="2026-09-27T02:04:48.000Z" title="发表于 2026-09-27 10:04:48">2026-09-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/26/HOOK-1/" title="HOOK--初识"><img src="/img/20260926174600_10_58.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="HOOK--初识"/></a><div class="content"><a class="title" href="/2026/09/26/HOOK-1/" title="HOOK--初识">HOOK--初识</a><time datetime="2026-09-26T09:13:43.000Z" title="发表于 2026-09-26 17:13:43">2026-09-26</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
