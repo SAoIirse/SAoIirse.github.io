@@ -1,0 +1,289 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>TEB,PEB和SEH | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="TEBTEB（Thread Environment Block，线程环境块）包含运行线程的各种信息，每个线程对应一个TEB结构体。 TEB结构体定义TEB包含信息有：结构化异常处理链表，栈信息，线程局部存储TLS指针，进程环境块PEB指针，Client ID：进程ID和线程ID，LastError 值：存放 GetLastError() 返回的错误码。不过TEB结构体在MSDN中的说明过于简洁 1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TEB,PEB和SEH">
+<meta property="og:url" content="https://saoirse.github.io/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="TEBTEB（Thread Environment Block，线程环境块）包含运行线程的各种信息，每个线程对应一个TEB结构体。 TEB结构体定义TEB包含信息有：结构化异常处理链表，栈信息，线程局部存储TLS指针，进程环境块PEB指针，Client ID：进程ID和线程ID，LastError 值：存放 GetLastError() 返回的错误码。不过TEB结构体在MSDN中的说明过于简洁 1">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/9_92.jpg">
+<meta property="article:published_time" content="2026-05-24T14:16:08.000Z">
+<meta property="article:modified_time" content="2026-11-13T06:45:01.200Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="windoes逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/9_92.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "TEB,PEB和SEH",
+  "url": "https://saoirse.github.io/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/",
+  "image": "https://saoirse.github.io/img/9_92.jpg",
+  "datePublished": "2026-05-24T14:16:08.000Z",
+  "dateModified": "2026-11-13T06:45:01.200Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'TEB,PEB和SEH',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/new_background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/8_92.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">TEB,PEB和SEH</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">TEB,PEB和SEH</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-24T14:16:08.000Z" title="发表于 2026-05-24 22:16:08">2026-05-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-13T06:45:01.200Z" title="更新于 2026-11-13 14:45:01">2026-11-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/windoes%E9%80%86%E5%90%91/">windoes逆向</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="TEB"><a href="#TEB" class="headerlink" title="TEB"></a>TEB</h2><p>TEB（Thread Environment Block，线程环境块）<br>包含运行线程的各种信息，每个线程对应一个TEB结构体。</p>
+<h3 id="TEB结构体定义"><a href="#TEB结构体定义" class="headerlink" title="TEB结构体定义"></a>TEB结构体定义</h3><p>TEB包含信息有：结构化异常处理链表，栈信息，线程局部存储TLS指针，进程环境块PEB指针，Client ID：进程ID和线程ID，LastError 值：存放 GetLastError() 返回的错误码。不过TEB结构体在MSDN中的说明过于简洁</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _TEB &#123;</span><br><span class="line">  PVOID Reserved1[12];</span><br><span class="line">  PPEB  ProcessEnvironmentBlock;		//指向 PEB（进程环境块） 的指针</span><br><span class="line">  PVOID Reserved2[399];</span><br><span class="line">  BYTE  Reserved3[1952];</span><br><span class="line">  PVOID TlsSlots[64];</span><br><span class="line">  BYTE  Reserved4[8];</span><br><span class="line">  PVOID Reserved5[26];</span><br><span class="line">  PVOID ReservedForOle;</span><br><span class="line">  PVOID Reserved6[4];</span><br><span class="line">  PVOID TlsExpansionSlots;</span><br><span class="line">&#125; TEB, *PTEB;</span><br></pre></td></tr></table></figure>
+<p>TEB结构体在MSDN中的说明很简洁，向AI大人学习后标注如下：<br>ProcessEnvironmentBlock：PEB指针，TEB通过该指针连接进程全局信息<br>Reserved 数组：为兼容性，发展以及内部机制预留空间。<br>TlsSlots[64]：包含 64 个 PVOID 的数组，存放数据指针，方便进程调用线程私有数据。<br>TlsExpansionSlots：指向一个扩展的 TLS 数组，TlsSlots[64]数组的备用空间。</p>
+<h3 id="TEB重要成员"><a href="#TEB重要成员" class="headerlink" title="TEB重要成员"></a>TEB重要成员</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">NtTiB														:_NT_TIB</span><br><span class="line">ProcessEnvironmentalBlock				  :Ptr32 _PEB</span><br></pre></td></tr></table></figure>
+<p>ProcessEnvironmentalBlock：指向PEB结构体指针，便于访问进程拿全局信息<br>NtTiB：TEB结构体第一个成员，TEB 的地址 &#x3D;&#x3D; NT_TIB 的地址（TIB是Thread Information Block,意思是线程信息块）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _NT_TIB &#123;</span><br><span class="line">    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;</span><br><span class="line">    PVOID StackBase;</span><br><span class="line">    PVOID StackLimit;</span><br><span class="line">    PVOID SubSystemTib;</span><br><span class="line">    union &#123;</span><br><span class="line">        PVOID FiberData;</span><br><span class="line">        DWORD Version;</span><br><span class="line">    &#125;;</span><br><span class="line">    PVOID ArbitraryUserPointer;</span><br><span class="line">    struct _NT_TIB *Self;</span><br><span class="line">&#125; NT_TIB;</span><br><span class="line">typedef NT_TIB *PNT_TIB;</span><br></pre></td></tr></table></figure>
+<p>ExceptionList：指向结构化异常处理（SEH）链表的头指针，编译器生成的异常处理代码会直接通过FS:<a href="32%E4%BD%8D">0</a>或GS:<a href="64%E4%BD%8D">0</a>来维护链表。<br>StackBase 和 StackLimit：base规定线程栈的高地址端也就是基地址，limit规定了低地址端也就是线程栈的界限<br>SubSystemTib：子系统相关的 TIB 指针，用于兼容OS&#x2F;2 或 POSIX 子系统<br>union { FiberData; Version; }：<br>● FiberData：如果当前线程是一个纤程（Fiber），这个字段指向纤程数据。纤程是比线程更轻量的执行单元，由用户态调度。<br>● Version：如果当前线程不是纤程，这个字段表示 TIB 的版本号。通常值为 1。<br>ArbitraryUserPointer：供用户自由使用的指针，应用程序在这里存放任意数据。<br>Self：指向 NT_TIB 结构体自身的指针。允许线程通过一个已知位置（NtTib 的起始处）轻松找到 TEB 的完整地址。在 32 位 Windows 中，Self 通常等于 FS:[0x18] 处存放的值。</p>
+<h2 id="FS段寄存器"><a href="#FS段寄存器" class="headerlink" title="FS段寄存器"></a>FS段寄存器</h2><p>● FS:[0x18]&#x3D;TEB起始地址：<br>● FS:[0x30]&#x3D;PEB起始地址<br>● FS:[0]&#x3D;SEH起始地址<br>在上一知识点中提到TEB的重要成员ExceptionList和Self用FS段寄存器存储值，所以在了解TEB访问方式之前有必要回顾一下汇编学的FS段寄存器。其实FS段寄存器就是用来指示当前线程的TEB结构体的。</p>
+<h3 id="SDT"><a href="#SDT" class="headerlink" title="SDT"></a>SDT</h3><p>SDT位于内核内存区域，地址存储在特殊寄存器GDTR（全局描述符表寄存器）中。</p>
+<blockquote>
+<p>这部分想要理解应该要再看一下内核那篇了，但我没有深耕内核领域，所以这块只在文章中简单介绍，不做详解。<br>那么先思考一下FS寄存器只有16位，而在IA-32位中需要一个32位指针，那么FS寄存器是怎么表示进程内存空间中的TEB结构体地址的？<br>是因为FS并非直接指向TEB结构的地址[存放的是段选择子]，而是只需要持有SDT的索引，SDT的索引持有TEB实际地址。<br><strong>完整链路</strong></p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">FS 寄存器（16 位段选择子）</span><br><span class="line">        │</span><br><span class="line">        │ 选择子结构：</span><br><span class="line">        │   bit 0-1  : RPL（请求特权级）</span><br><span class="line">        │   bit 2    : TI（0=GDT, 1=LDT）</span><br><span class="line">        │   bit 3-15 : 描述符索引</span><br><span class="line">        ▼</span><br><span class="line">┌─────────────────────────────┐</span><br><span class="line">│  GDT 或 LDT                 │</span><br><span class="line">│  ┌───────────────────────┐  │</span><br><span class="line">│  │ 第 N 项：段描述符      │  │</span><br><span class="line">│  │  ┌─────────────────┐  │  │</span><br><span class="line">│  │  │ 段基址 (32位)   │──┼──┼──→ 指向 TEB 的线性地址</span><br><span class="line">│  │  │ 段限长          │  │  │</span><br><span class="line">│  │  │ 访问权限        │  │  │</span><br><span class="line">│  │  └─────────────────┘  │  │</span><br><span class="line">│  └───────────────────────┘  │</span><br><span class="line">└─────────────────────────────┘</span><br><span class="line">        │</span><br><span class="line">        │ 段基址被缓存到 FS 的隐藏部分</span><br><span class="line">        ▼</span><br><span class="line">   FS 隐藏基址 = TEB 线性地址</span><br><span class="line">        │</span><br><span class="line">        ▼</span><br><span class="line">   fs:[0x18] → TEB.NtTib.Self</span><br><span class="line">   fs:[0x30] → TEB.ProcessEnvironmentBlock</span><br></pre></td></tr></table></figure>
+<h3 id="TEB访问方式"><a href="#TEB访问方式" class="headerlink" title="TEB访问方式"></a>TEB访问方式</h3><p><strong>核心思路：通过OS提供的API</strong><br>Ntdll.NtCurrentTeb():<br>Ntdll.NtCurrentTeb()：一个获取当前线程TEB地址的函数<br>随便在OD打开一个程序，我们可以通过当前模块名称查找，按照名称排序快速找到Ntdll.NtCurrentTeb()API<br><img src="/img/image-349.png"><br>跟进查看函数内部结构：此函数内部结构简单无比，只返回FS:[0x18]的地址值<br><img src="/img/image-350.png"><br>此时看到的FS寄存器的值就是TEB起始位置的值。</p>
+<h3 id="TEB总结"><a href="#TEB总结" class="headerlink" title="TEB总结"></a>TEB总结</h3><p>TEB 是逆向工程中通往线程和进程底层状态的“后门”，很多反调试、反 Hook、隐藏技术都围绕TEB展开。如下表<br>反调试	    通过 PEB.BeingDebugged、NtGlobalFlag、堆标志等检测调试器<br>隐藏线程	从线程链表中摘除 TEB<br>获取信息	进程 ID、线程 ID、PEB、LastError<br>遍历模块	通过 PEB.Ldr 找到所有模块基址<br>绕过 Hook	直接调用 ntdll 底层函数<br>异常处理	通过 SEH 链表找到异常处理函数<br>TLS 分析	访问 TlsSlots 分析线程局部存储<br>反沙箱	    检查 PEB 中的硬件信息</p>
+<h2 id="PEB"><a href="#PEB" class="headerlink" title="PEB"></a>PEB</h2><h3 id="PEB结构体定义"><a href="#PEB结构体定义" class="headerlink" title="PEB结构体定义"></a>PEB结构体定义</h3><p>PEB是进程环境块，存放进程信息的结构体，自然尺寸也很大。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _PEB &#123;</span><br><span class="line">  BYTE                          Reserved1[2];</span><br><span class="line">  BYTE                          BeingDebugged;</span><br><span class="line">  BYTE                          Reserved2[1];</span><br><span class="line">  PVOID                         Reserved3[2];</span><br><span class="line">  PPEB_LDR_DATA                 Ldr;</span><br><span class="line">  PRTL_USER_PROCESS_PARAMETERS  ProcessParameters;</span><br><span class="line">  PVOID                         Reserved4[3];</span><br><span class="line">  PVOID                         AtlThunkSListPtr;</span><br><span class="line">  PVOID                         Reserved5;</span><br><span class="line">  ULONG                         Reserved6;</span><br><span class="line">  PVOID                         Reserved7;</span><br><span class="line">  ULONG                         Reserved8;</span><br><span class="line">  ULONG                         AtlThunkSListPtr32;</span><br><span class="line">  PVOID                         Reserved9[45];</span><br><span class="line">  BYTE                          Reserved10[96];</span><br><span class="line">  PPS_POST_PROCESS_INIT_ROUTINE PostProcessInitRoutine;</span><br><span class="line">  BYTE                          Reserved11[128];</span><br><span class="line">  PVOID                         Reserved12[1];</span><br><span class="line">  ULONG                         SessionId;</span><br><span class="line">&#125; PEB, *PPEB;</span><br></pre></td></tr></table></figure>
+<h3 id="PEB重要成员"><a href="#PEB重要成员" class="headerlink" title="PEB重要成员"></a>PEB重要成员</h3><p>其中几个结构体成员是我们早在学习反调试的时候就见过的，都并非新朋友了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+0x002 BeingDebugged    : UChar</span><br><span class="line">+0x008 ImageBaseAddress : Ptr32 Void</span><br><span class="line">+0x00c Ldr              : Ptr32 _PEB_LDR_DATA</span><br><span class="line">+0x018 ProcessHeap      : Ptr32 Void</span><br><span class="line">+0x068 NtGlobalFlag     : Uint4B</span><br></pre></td></tr></table></figure>
+<h4 id="BeingDebugged"><a href="#BeingDebugged" class="headerlink" title="BeingDebugged"></a>BeingDebugged</h4><p>kernel32.dll中Kernel32!IsDebuggerPresent()的API就是用来判断当前进程是否处于调试状态，并返回判断结果<br>原理：通过检测PEB.BeingDebugged成员来确定是否正在调试程序，1&#x3D;调试，0&#x3D;未被调试</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BOOL WINAPI IsDebuggerPresent（）</span><br></pre></td></tr></table></figure>
+<h4 id="ImageBaseAddress"><a href="#ImageBaseAddress" class="headerlink" title="ImageBaseAddress"></a>ImageBaseAddress</h4><p>PEB.ImageBaseAddress成员用来表示进程的ImageBase<br>GetModuleHandle()API用来获取ImageBase</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">HMODULE WINAPI GetModuleHandle（</span><br><span class="line">	__in_opt 	LPCTSTR		lpModuleName </span><br><span class="line">	//向lpModuleName参数赋值为NULL，调用GetModuleHandle（）函数将返回进程被加载的ImageBase）</span><br></pre></td></tr></table></figure>
+<h4 id="PE-Ldr"><a href="#PE-Ldr" class="headerlink" title="PE.Ldr"></a>PE.Ldr</h4><p>PEB.Ldr成员是指向了_ PEB _ LDR _ DATA结构体指针，_ PEB _ LDR _ DATA结构体如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ypedef struct _PEB_LDR_DATA</span><br><span class="line">&#123;</span><br><span class="line">	ULONG         Length;                             // 00h</span><br><span class="line">　	BOOLEAN       Initialized;                        // 04h</span><br><span class="line">	PVOID         SsHandle;                           // 08h</span><br><span class="line">　	LIST_ENTRY    InLoadOrderModuleList;              // 0ch</span><br><span class="line">　	LIST_ENTRY    InMemoryOrderModuleList;            // 14h</span><br><span class="line">　	LIST_ENTRY    InInitializationOrderModuleList;    // 1ch</span><br><span class="line">　	EntryInProgress  //Ptr32 Void</span><br><span class="line">　	ShutdownInProgress  //Uchar</span><br><span class="line">　	ShutdownThreadId //Ptr32 Void</span><br><span class="line">&#125;</span><br><span class="line">    PEB_LDR_DATA,</span><br><span class="line">    *PPEB_LDR_DATA;                                 // 24h</span><br></pre></td></tr></table></figure>
+<p>当模块（DLL）加载到进程后，通过PEB.ldr成员可以直接获得该模块的加载基地址<br>_PEB_LDR_DATA结构体成员中有3个LIST_ENTRY类型的成员（InLoadOrderModuleList、InMemoryOrderModuleList;、InInitializationOrderModuleList;），LIST_ENTRY结构体的定义如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _LIST_ENTRY&#123;</span><br><span class="line">	struct _LIST_ENTRY *Flink;</span><br><span class="line">	struct _LIST_ENTRY *Blink;</span><br><span class="line">&#125;LIST_ENTRY,*LIST_ENTRY</span><br></pre></td></tr></table></figure>
+<p>_LIST_ENTRY结构体提供了双向链表机制，而链表中保存了_LDR_DATA_TABLE_ENTRY结构体的信息，_LDR_DATA_TABLE_ENTRY结构体如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">	typedef struct _LDR_DATA_TABLE_EBTRY&#123;  // Start from Windows XP</span><br><span class="line">   	PVOID Reservedl[2];</span><br><span class="line">    LIST_ENTRY InMemoryOrderLinks;</span><br><span class="line">    PVOID Reserved2[2];</span><br><span class="line">    PVOID DllBase;</span><br><span class="line">    PVOID EntryPoint;</span><br><span class="line">    PVOID Reserved3;</span><br><span class="line">    ULONG SizeOfImage;</span><br><span class="line">    UNICODE_STRING FullDllName;</span><br><span class="line">    PVOID Reserved4[8];</span><br><span class="line">   	PVOID Reserved5[3];</span><br><span class="line">    union &#123;</span><br><span class="line">            PVOID SectionPointer;</span><br><span class="line">            ULONG CheckSum;</span><br><span class="line">&#125;</span><br><span class="line">	ULONG TimeDateStamp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每个加载到进程中的DLL模块都有与之对应的_LDR_DATA_TABLE_EBTRY结构体，这些结构体相互链接，最终形成_LIST_ENTRY双向链表.</p>
+<h4 id="ProcessHeap-NtGlobalFlag"><a href="#ProcessHeap-NtGlobalFlag" class="headerlink" title="ProcessHeap &amp; NtGlobalFlag"></a>ProcessHeap &amp; NtGlobalFlag</h4><p>PEB.ProcessHeap &amp; PEB.NtGlobalFlag （和PEB.BeingDebugger成员一样）应用于反调试技术，若处于被调试状态，则它们会被赋于特定的值</p>
+<h4 id="PEB访问方法"><a href="#PEB访问方法" class="headerlink" title="PEB访问方法"></a>PEB访问方法</h4><p>TEB.ProcessEnvironmentBlock成员就是PEB 结构体的地址<br>TEB结构体位于FS段选择符所指的段内存的起始地址处，且ProcessEnvironmentBlock成员位于距TEB结构体Offest 30的位置，所以有：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FS：[30]=TEB.ProcessEnvironmentBlock=address of PEB</span><br></pre></td></tr></table></figure>
+<p>反调试：BeingDebugged、NtGlobalFlag、堆标志<br>动态解析 API：通过 Ldr，遍历模块，解析导出表<br>绕过 Hook：直接调用 ntdll，底层函数<br>获取进程信息：命令行、路径、环境变量、模块基址<br>反沙箱：CPU 核心数、内存大小、系统版本<br>隐藏模块：修改模块链表，隐藏 DLL<br>检测 Hook：检查 API 开头字节是否被修改</p>
+<h2 id="SEH"><a href="#SEH" class="headerlink" title="SEH"></a>SEH</h2><p>之前在反调试章节已经学过一遍SEH，但本篇讲解可能更接近于SEH底层原理。<br>SEH是Windows操作系统提供的异常处理机制，在程序源代码中使用__ try、 __except、__finally关键字来具体实现。<br>OS异常处理机制：<br>1.正常运行时<br>当程序出现异常OS委托进程处理，如果进程代码存在异常处理具体代码，能够顺利处理相关异常。但遇到进程内部没有实现SEH，那么程序异常无法被处理，OS启动默认异常处理机制–终止程序。<br>2.调试时<br>调试过程中出现异常OS会先委托调试进程处理，调试器几乎拥有被调试者的所有权限，所以在调试过程中遇到的异常都要先交给调试进程处理，调试进程可以选择暂停，等待人为修改异常（代码，寄存器或者内存）。也可以通过步进步过将异常交给被调试者处理，当被调试者处理不了的时候，OS启动默认异常处理机制–终止程序。</p>
+<p>结构体部分在之前的文章中都有讲到，这里就不再多说，详情参见《异常处理》<br><a target="_blank" rel="noopener" href="https://saoiirse.github.io/2026/08/23/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">https://saoiirse.github.io/2026/08/23/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/</a></p>
+<h3 id="SEH链"><a href="#SEH链" class="headerlink" title="SEH链"></a>SEH链</h3><p>SEH以链的形式存在，这个链是由_EXCEPTION_REGISTRATION_RECORD结构体组成的，每次程序发现异常，将异常从第一个异常处理器传入直到异常得到处理。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _EXCEPTION_REGISTRATION_RECORD</span><br><span class="line">&#123;</span><br><span class="line">	// 链表以Next成员为FFFFFFFF的结构体结束，表示链表的最后一个结点</span><br><span class="line">	PEXCEPTION_REGISTRATION_RECORD Next;</span><br><span class="line">	// Handler：异常处理函数</span><br><span class="line">	PEXCEPTION_DISPOSITION Handler;</span><br><span class="line">&#125; EX</span><br></pre></td></tr></table></figure>
+<p>NEXT成员 会指向下一个_EXCEPTION_REGISTRATION_RECORD结构体指针，若Next成员的值是FFFFFFFF,则表示它是链表最后一个节点<br><img src="/img/image-351.png"></p>
+<h3 id="异常处理器函数定义："><a href="#异常处理器函数定义：" class="headerlink" title="异常处理器函数定义："></a>异常处理器函数定义：</h3><p>函数接收4个参数，返回名叫EXCEPTION_DISPOSITION的枚举类型（enum）。改函数异常处理函数由系统调用，是一个回调函数。系统调用时会给出以上4个参数，其中保存着和异常相关信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">EXCEPTION_DISPOSITION _except_handler</span><br><span class="line">(</span><br><span class="line">	EXCEPTION_RECORD *pRecord,</span><br><span class="line">	EXCEPTION_REGISTRATIOIN_RECORD *pFrame,</span><br><span class="line">	CONTEXT *pContext,</span><br><span class="line">	PVOID pValue</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>第一个参数是指向EXCEPTION_RECORD结构体的指针，EXCEPTION_RECORD结构体定义：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">typedef struct _EXCEPTION_RECORD &#123;</span><br><span class="line">    DWORD ExceptionCode;						//异常代码，用来指明异常类型</span><br><span class="line">    DWORD ExceptionFlags;</span><br><span class="line">    struct _EXCEPTION_RECORD * ExceptionRecord;	</span><br><span class="line">    PVOID ExceptionAddress;						//发生异常的代码地址</span><br><span class="line">    DWORD NumberParameters;</span><br><span class="line">    ULONG_PTR ExceptionInformation[EXCEPTION_AMXIMUM_PARAMETERS];//15</span><br><span class="line">&#125; EXCEPTION_RECORD, *PEXCEPTION_RECORD</span><br></pre></td></tr></table></figure>
+<p>其中ExceptionCode用来指出异常类型，ExceptionAddres指出异常代码地址。<br>第三个参数*pContext是指向CONTEXT结构体的指针，该结构体用来备份CPU寄存器值，每个线程内部都有一个CONTEXT结构体，保证OS可以在多线程环境下安全运行各线程：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">struct CONTEXT</span><br><span class="line">&#123;</span><br><span class="line">	DWORD ContextFlags;</span><br><span class="line">	DWORD Dr0;</span><br><span class="line">	DWORD Dr1;</span><br><span class="line">	DWORD Dr2;</span><br><span class="line">	DWORD Dr3;</span><br><span class="line">	DWORD Dr6;</span><br><span class="line">	DWORD Dr7;</span><br><span class="line">	FLOATING_SAVE_AREA FloatSave;</span><br><span class="line">	DWORD SegGs;</span><br><span class="line">	DWORD SegFs;</span><br><span class="line">	DWORD SegEs;</span><br><span class="line">	DWORD SegDs;</span><br><span class="line">	DWORD Edi;</span><br><span class="line">	DWORD Esi;</span><br><span class="line">	DWORD Ebx;</span><br><span class="line">	DWORD Edx;</span><br><span class="line">	DWORD Ecx;</span><br><span class="line">	DWORD Eax;</span><br><span class="line">	DWORD Ebp;</span><br><span class="line">	DWORD Eip;</span><br><span class="line">	DWORD SegCs;</span><br><span class="line">	DWORD EFlags;</span><br><span class="line">	DWORD Esp;</span><br><span class="line">	DWORD SegSs;</span><br><span class="line">	BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];//512</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在异常处理时，执行异常代码的线程会中断运行，再运行SEH，此时OS就会把线程的CONTEXT指针传递给异常处理函数相应参数。看到结构体中由一个EIP成员，在异常处理函数中将参数传递过来的Eip设置为其他地址，然后返回异常处理函数。异常处理函数返回值是EXCEPTION_DISPOSITION枚举类型：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">typedef enum _EXCEPTION_DISPOSITION</span><br><span class="line">&#123;</span><br><span class="line">	ExceptionContinueExecution = 0,	//继续执行异常代码</span><br><span class="line">	ExceptionContinueSearch = 1,	//运行下一个异常处理器</span><br><span class="line">	ExceptionNestedException = 2,	//在OS内部使用</span><br><span class="line">	ExceptionCollidedUnwind = 3		//在OS内部使用</span><br><span class="line">&#125; E</span><br></pre></td></tr></table></figure>
+<p>在程序中可以通过TEB结构体访问SEH链【TEB.NtTib.ExceptionList &#x3D; FS:[0]】</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/">https://saoirse.github.io/2026/05/24/TEB，PEB和SEH/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/windoes%E9%80%86%E5%90%91/">windoes逆向</a></div><div class="post-share"><div class="social-share" data-image="/img/9_92.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img class="cover" src="/img/CTFnixiang.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">加密算法</div></div><div class="info-2"><div class="info-item-1">2026.11.7更新 BASE家族base64base64加密原理：base64加密本质是一种编码形式，数据以一种二进制文本的形式传递，编码过程分为三步1.将ASCII转换为对应的八位二进制数据2.合并起来，再以6位一组重新分配3.六位值映射到base64字符表位数不足时，在末尾补0，直至补齐组内位数 特征识别：● 字符串编码表识别● 加密填充符识别（一般为&#x3D;号）● bit：3 * 8变4 * 6● 输入参数会被移位拼接，移位位数为 2、4、6位，将3字节拆成4字节● 理解编码原理，编码时通常都会用3个字节一组来处理比特位数据，这些特征都可以用来分析识别。常规魔改：编码表（TLS、SMC等各种反调试位置） 对base64的编码实现：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081//定义一个常量指针指向一个常量字符...</div></div></div></a><a class="pagination-related" href="/2026/05/24/TLS%E5%9B%9E%E8%B0%83/" title="TLS回调函数"><img class="cover" src="/img/9_92.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">TLS回调函数</div></div><div class="info-2"><div class="info-item-1">TLS是各线程独立的数据存储空间，使用TLS技术，可以在线程内部独立使用或修改进程的全局数据或者静态数据。注：在TLS中定义的变量，同一个线程里的所有函数均可访问，但其他线程无法访问。 IMAGE_DATA_DIRECTORY[9]123IMAGE_NT_HEADERSIMAGE_OPTIONAL_HEADERIMAGE_DATA_DIRECTORY[9] 在编程中启用TLS功能，PE文件头中会设置TLS表。如图所示，TLS表中能够看到TLS结构体所在的RVA和SIZE。 TLS结构体定义TLS结构体分为64位和32位的两个版本，二者属性个数相同但属性长度发生了变化。当然根据TLS结构体也能够定位到其二进制数据位置，以下是64位和32位数据结构体示例：64位: 12345678910111213141516typedef struct _IMAGE_TLS_DIRECTORY64 &#123;    ULONGLONG StartAddressOfRawData;    ULONGLONG EndAddressOfRawData;    ULONGLONG AddressOfIn...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/24/010Editor%E7%A0%B4%E8%A7%A3/" title="010Editor破解"><img class="cover" src="/img/20210426110332_bab78.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">010Editor破解</div></div><div class="info-2"><div class="info-item-1">思路总结破解010editor使用权限需要绕过注册校验，那么核心就在于注册标志的修改，我们硬性的将注册标志修改为已注册，但程序会”回写“或者”刷新“这个标志。那想要永久修改就必须在设置这个标志的公共CALL（子程序）内部修改程序流向，本质上是为了欺骗“执行逻辑”。因此我们考虑直接将验证call修改，省略中间那部分麻烦的验证，直接校验最后的0xDB注册标志值。 注册流程-程序分析想要破解010，要先知道我们需要对程序做什么，打补丁或者修改二进制数据来破解权限也要明白这个程序的权限检查原理，和具体需要修改的位置。010还是对我这种菜鸡比较友好的exe程序，我觉得整体下来很适合作为初期开始步入实战的学习资料。 查壳用exeinfo进行查壳，省心exe文件，无壳 固定地址–防止程序重定向基址打开 sydyPe，修改 EXE 的 ImageBase（映像基址），也就是在固定程序的基址，这样我们每次加载程序就不怕之前的分析白费了，记得保存。 注册流程标志性信息标志性提示信息字符串是很好的切入点，将程序放到X64dbg中去，先F9一直运行到程序入口，能到看到明显的程序入口标志和大片的jmp表。...</div></div></div></a><a class="pagination-related" href="/2026/05/24/TLS%E5%9B%9E%E8%B0%83/" title="TLS回调函数"><img class="cover" src="/img/9_92.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">TLS回调函数</div></div><div class="info-2"><div class="info-item-1">TLS是各线程独立的数据存储空间，使用TLS技术，可以在线程内部独立使用或修改进程的全局数据或者静态数据。注：在TLS中定义的变量，同一个线程里的所有函数均可访问，但其他线程无法访问。 IMAGE_DATA_DIRECTORY[9]123IMAGE_NT_HEADERSIMAGE_OPTIONAL_HEADERIMAGE_DATA_DIRECTORY[9] 在编程中启用TLS功能，PE文件头中会设置TLS表。如图所示，TLS表中能够看到TLS结构体所在的RVA和SIZE。 TLS结构体定义TLS结构体分为64位和32位的两个版本，二者属性个数相同但属性长度发生了变化。当然根据TLS结构体也能够定位到其二进制数据位置，以下是64位和32位数据结构体示例：64位: 12345678910111213141516typedef struct _IMAGE_TLS_DIRECTORY64 &#123;    ULONGLONG StartAddressOfRawData;    ULONGLONG EndAddressOfRawData;    ULONGLONG AddressOfIn...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img class="cover" src="/img/CTFnixiang.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">加密算法</div></div><div class="info-2"><div class="info-item-1">2026.11.7更新 BASE家族base64base64加密原理：base64加密本质是一种编码形式，数据以一种二进制文本的形式传递，编码过程分为三步1.将ASCII转换为对应的八位二进制数据2.合并起来，再以6位一组重新分配3.六位值映射到base64字符表位数不足时，在末尾补0，直至补齐组内位数 特征识别：● 字符串编码表识别● 加密填充符识别（一般为&#x3D;号）● bit：3 * 8变4 * 6● 输入参数会被移位拼接，移位位数为 2、4、6位，将3字节拆成4字节● 理解编码原理，编码时通常都会用3个字节一组来处理比特位数据，这些特征都可以用来分析识别。常规魔改：编码表（TLS、SMC等各种反调试位置） 对base64的编码实现：123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081//定义一个常量指针指向一个常量字符...</div></div></div></a><a class="pagination-related" href="/2026/05/24/PE2/" title="PE文件格式[2]"><img class="cover" src="/img/2026-09-27_182622_094.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">PE文件格式[2]</div></div><div class="info-2"><div class="info-item-1"> 进入到PE文件格式的第二篇，本篇重点IAT。  IAT–导入地址表IAT表存储的是绝对地址，导入表 在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL ( 模块 )，并填充所需函数的地址。 IMAGE_DIRECTORY_ENTRY_IMPORT，即导入表1.IMAGE_DIRECTORY_ENTRY_IMPORT 就是导入表，在 PE 文件加载时，会根据这个表里的内容加载依赖的 DLL（模块），并填充所需函数的地址。2.IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT 叫做绑定导入表，在第一种导入表导入地址的修正是在PE加载时完成，如果一个PE文件导入的DLL或者函数多那么加载起来就会略显的慢一些，所以出现了绑定导入，在加载以前就修正了导入表，这样就会快一些。3.IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT 叫做延迟导入表，一个PE文件也许提供了很多功能，也导入了很多其他DLL，但是并非每次加载都会用到它提供的所有功能，也不一定会用到它需要导入的所有DLL，因此延迟导入就出现了，只有在一个PE文件真正用到需要的DLL，这个...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E6%A0%88%E5%92%8C%E6%A0%88%E5%B8%A7/" title="栈和栈帧"><img class="cover" src="/img/9_92.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">栈和栈帧</div></div><div class="info-2"><div class="info-item-1">栈应于存储局部变量，传递函数参数，保存函数返回地址。调试程序应该不断观察栈内存。在逆向的时候我们经常说到的bp，sp都和栈有关，汇编语言表达栈段为寄存器SS，SP在汇编中则表示栈顶在段内的偏移。 栈的作用1.暂时保护函数内的局部变量2.调用函数时传递参数3.保存函数返回后的地址ESP为栈顶指针，初始在栈底(高地址)，PUSH使ESP自减移到栈顶方向。 栈指针变化规律：栈指针随着压栈出栈的数据移动，入栈时栈指针地址减少，出栈时栈指针地址增加。栈顶地址小于栈底地址。判断方法  看助记符，判断属于哪类：  ○ push &#x2F; call → 入栈  ○ pop &#x2F; ret → 出栈  ○ sub esp, N → 分配（栈顶下降）  ○ add esp, N &#x2F; mov esp, ebp &#x2F; leave → 回收（栈顶上升）  ○ 其余 → 一般不动 ESP 改 ESP：  ○ x86：每次 ±4  ○ x64：每次 ±8 写&#x2F;读栈内存（只有 push&#x2F;pop&#x2F;call&#x2F;ret 才真正读写栈内容；sub esp...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E5%86%85%E5%B5%8C%E8%A1%A5%E4%B8%81/" title="内嵌补丁"><img class="cover" src="/img/20210426110332_bab78.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">内嵌补丁</div></div><div class="info-2"><div class="info-item-1">内嵌补丁，即在将补丁写在洞穴代码的位置，再修改跳转地址，让补丁代码跟随程序每一次运行一起执行。常见内嵌补丁运用在对有压缩壳，加密壳的程序进行打补丁修改的情况下。  洞穴代码：文件中空白的区域即称洞穴代码。  原理：我觉得，内嵌补丁的运行原理极其类似于HOOK，在壳结束后本应跳转到OPE的位置hook到内嵌补丁，等待内嵌补丁运行完成后再回到原来的OEP。 实例练习：补丁目的：修改弹窗提示语句。 patchme程序分析这是《逆向工程核心原理》的电子资料。运行程序，会发现弹出消息框，要求更改显式的字符串，点确定之后能看到一个对话框，内容提示翻译–解压文件。现在大概清楚程序的基本内容后，进行查壳，有壳64位程序但并非upx壳，放入OD调试：经过简单调试发现程序中没有什么已知明文字符，看来是对程序进行了一些混淆加密等流程，但EP是十分明确的持续跟进CALL指令，找到加密逻辑进行分析。跟进unpackme.004010F5后，发现第一个加密逻辑–循环解密，解密区域为4010F5-401248。【对区域范围判断做出解释：起始地址存在ebx寄存器中（0x401007）,长度存在ecx寄存器中（0...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学点逆向，每天拆拆拆不停</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新Orz!</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#TEB"><span class="toc-number">1.</span> <span class="toc-text">TEB</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#TEB%E7%BB%93%E6%9E%84%E4%BD%93%E5%AE%9A%E4%B9%89"><span class="toc-number">1.1.</span> <span class="toc-text">TEB结构体定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TEB%E9%87%8D%E8%A6%81%E6%88%90%E5%91%98"><span class="toc-number">1.2.</span> <span class="toc-text">TEB重要成员</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FS%E6%AE%B5%E5%AF%84%E5%AD%98%E5%99%A8"><span class="toc-number">2.</span> <span class="toc-text">FS段寄存器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SDT"><span class="toc-number">2.1.</span> <span class="toc-text">SDT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TEB%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F"><span class="toc-number">2.2.</span> <span class="toc-text">TEB访问方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TEB%E6%80%BB%E7%BB%93"><span class="toc-number">2.3.</span> <span class="toc-text">TEB总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PEB"><span class="toc-number">3.</span> <span class="toc-text">PEB</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PEB%E7%BB%93%E6%9E%84%E4%BD%93%E5%AE%9A%E4%B9%89"><span class="toc-number">3.1.</span> <span class="toc-text">PEB结构体定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PEB%E9%87%8D%E8%A6%81%E6%88%90%E5%91%98"><span class="toc-number">3.2.</span> <span class="toc-text">PEB重要成员</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#BeingDebugged"><span class="toc-number">3.2.1.</span> <span class="toc-text">BeingDebugged</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ImageBaseAddress"><span class="toc-number">3.2.2.</span> <span class="toc-text">ImageBaseAddress</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#PE-Ldr"><span class="toc-number">3.2.3.</span> <span class="toc-text">PE.Ldr</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ProcessHeap-NtGlobalFlag"><span class="toc-number">3.2.4.</span> <span class="toc-text">ProcessHeap &amp; NtGlobalFlag</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#PEB%E8%AE%BF%E9%97%AE%E6%96%B9%E6%B3%95"><span class="toc-number">3.2.5.</span> <span class="toc-text">PEB访问方法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SEH"><span class="toc-number">4.</span> <span class="toc-text">SEH</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SEH%E9%93%BE"><span class="toc-number">4.1.</span> <span class="toc-text">SEH链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%99%A8%E5%87%BD%E6%95%B0%E5%AE%9A%E4%B9%89%EF%BC%9A"><span class="toc-number">4.2.</span> <span class="toc-text">异常处理器函数定义：</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/%E4%B8%87%E8%83%BD%E9%92%A5%E5%8C%99%E7%AF%87/" title="万能钥匙篇"><img src="/img/category_img.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="万能钥匙篇"/></a><div class="content"><a class="title" href="/2026/05/24/%E4%B8%87%E8%83%BD%E9%92%A5%E5%8C%99%E7%AF%87/" title="万能钥匙篇">万能钥匙篇</a><time datetime="2026-05-24T14:16:10.000Z" title="发表于 2026-05-24 22:16:10">2026-05-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法"><img src="/img/CTFnixiang.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="加密算法"/></a><div class="content"><a class="title" href="/2026/05/24/%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" title="加密算法">加密算法</a><time datetime="2026-05-24T14:16:09.000Z" title="发表于 2026-05-24 22:16:09">2026-05-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/" title="TEB,PEB和SEH"><img src="/img/9_92.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="TEB,PEB和SEH"/></a><div class="content"><a class="title" href="/2026/05/24/TEB%EF%BC%8CPEB%E5%92%8CSEH/" title="TEB,PEB和SEH">TEB,PEB和SEH</a><time datetime="2026-05-24T14:16:08.000Z" title="发表于 2026-05-24 22:16:08">2026-05-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/TLS%E5%9B%9E%E8%B0%83/" title="TLS回调函数"><img src="/img/9_92.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="TLS回调函数"/></a><div class="content"><a class="title" href="/2026/05/24/TLS%E5%9B%9E%E8%B0%83/" title="TLS回调函数">TLS回调函数</a><time datetime="2026-05-24T14:16:07.000Z" title="发表于 2026-05-24 22:16:07">2026-05-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/010Editor%E7%A0%B4%E8%A7%A3/" title="010Editor破解"><img src="/img/20210426110332_bab78.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="010Editor破解"/></a><div class="content"><a class="title" href="/2026/05/24/010Editor%E7%A0%B4%E8%A7%A3/" title="010Editor破解">010Editor破解</a><time datetime="2026-05-24T14:16:06.000Z" title="发表于 2026-05-24 22:16:06">2026-05-24</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界^^</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
