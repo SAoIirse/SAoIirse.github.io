@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>VMP壳--初识 | Saoirse's Blog</title><meta name="author" content="Saoirse"><meta name="copyright" content="Saoirse"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="VMP 的特色功能包括虚拟化、混淆、反调试等。  VMProtect 虚拟化原理VMP是一款栈机，其代码虚拟机和被保护的程序代码都存在栈中。基于栈的虚拟机指令集主要是通过操作栈顶元素来完成。  VM虚拟化流程： 代码转换成指令：每个指令会有一个函数对应解释这个指令，相当于小型的解释器  VMP 还会对一些系统对象如文件、注册表等进行虚拟化，在虚拟机内部维护虚拟的系统资源，使得在虚拟机内部的系统交互">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VMP壳--初识">
+<meta property="og:url" content="https://saoirse.github.io/2026/05/24/VMP%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Saoirse&#39;s Blog">
+<meta property="og:description" content="VMP 的特色功能包括虚拟化、混淆、反调试等。  VMProtect 虚拟化原理VMP是一款栈机，其代码虚拟机和被保护的程序代码都存在栈中。基于栈的虚拟机指令集主要是通过操作栈顶元素来完成。  VM虚拟化流程： 代码转换成指令：每个指令会有一个函数对应解释这个指令，相当于小型的解释器  VMP 还会对一些系统对象如文件、注册表等进行虚拟化，在虚拟机内部维护虚拟的系统资源，使得在虚拟机内部的系统交互">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://saoirse.github.io/img/20260926174757_12_58.png">
+<meta property="article:published_time" content="2026-05-24T14:16:22.000Z">
+<meta property="article:modified_time" content="2026-11-13T10:20:05.538Z">
+<meta property="article:author" content="Saoirse">
+<meta property="article:tag" content="混淆与反混淆">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://saoirse.github.io/img/20260926174757_12_58.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "VMP壳--初识",
+  "url": "https://saoirse.github.io/2026/05/24/VMP%E7%B1%BB%E5%9E%8B/",
+  "image": "https://saoirse.github.io/img/20260926174757_12_58.png",
+  "datePublished": "2026-05-24T14:16:22.000Z",
+  "dateModified": "2026-11-13T10:20:05.538Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Saoirse",
+      "url": "https://github.com/SAoIirse/SAoIirse.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://saoirse.github.io/2026/05/24/VMP%E7%B1%BB%E5%9E%8B/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 8 || hour >= 23
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'VMP壳--初识',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/new_background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">27</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/20260926174557_8_58.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.jpg" alt="Logo"><span class="site-name">Saoirse's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">VMP壳--初识</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">VMP壳--初识</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-24T14:16:22.000Z" title="发表于 2026-05-24 22:16:22">2026-05-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-13T10:20:05.538Z" title="更新于 2026-11-13 18:20:05">2026-11-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B7%B7%E6%B7%86%E7%B3%BB%E5%88%97/">混淆系列</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p><strong>VMP 的特色功能包括虚拟化、混淆、反调试等。</strong></p>
+<p><img src="/img/image-214.png"></p>
+<h2 id="VMProtect-虚拟化原理"><a href="#VMProtect-虚拟化原理" class="headerlink" title="VMProtect 虚拟化原理"></a>VMProtect 虚拟化原理</h2><p>VMP是一款栈机，其代码虚拟机和被保护的程序代码都存在栈中。基于栈的虚拟机指令集主要是通过操作栈顶元素来完成。</p>
+<p><img src="/img/image-215.png"></p>
+<h2 id="VM虚拟化流程："><a href="#VM虚拟化流程：" class="headerlink" title="VM虚拟化流程："></a>VM虚拟化流程：</h2><ol>
+<li><p>代码转换成指令：每个指令会有一个函数对应解释这个指令，相当于小型的解释器</p>
+</li>
+<li><p>VMP 还会对一些系统对象如文件、注册表等进行虚拟化，在虚拟机内部维护虚拟的系统资源，使得在虚拟机内部的系统交互不会影响到真实系统。 VMP 通常会结合多种反调试技术,例如代码自修改、反跟踪、反模拟执行等，增加调试难度。</p>
+</li>
+<li><p>初始化虚拟环境：开启VStartVM 代码,从现实环境转换到虚拟环境,并且初始化虚拟机的上下文环境，将真实环境中的寄存器状态保存（压栈），准备虚拟机所需要的栈堆空间。 VStartVM 代码部分还可能对一些关键的API进行HOOK，截获系统调用，在虚拟环境中模拟执行。允许在受保护的代码块中插入特定指令用于切换回真实环境。</p>
+</li>
+<li><p>读取虚拟化指令+执行：</p>
+<p> VMDispatcher：从虚拟指令流中读取虚拟指令，并且解码确定对应的处理程序。解码后并非直接执行真是指令，而是调用相应的handler模拟执行。</p>
+<blockquote>
+<p><strong>虚拟指令流</strong>（Virtual Instruction Stream）指的是：<strong>经过自定义虚拟机加密和编码后的字节码序列，在被虚拟机的调度器逐条读取、解密并分发执行时所形成的动态逻辑流。</strong></p>
+</blockquote>
+<p> 这里，VMDispatcher只会读取翻译指令，将数据标识的指令翻译为handler可读的汇编指令。而handler才是真正处理，执行指令的部分。</p>
+</li>
+<li><p>VMP使用了两个堆栈，虚拟堆栈是给虚拟机内部使用，真实堆栈是线程原有的堆栈。为了避免二者冲突，VMP 会监控堆栈指针 esp，当虚拟指令需要修改真实寄存器的时候，（例如，虚拟环境和现实环境交互时）真是寄存器的值会被临时保存到真实的堆栈中，并将虚拟寄存器的值应用到真实寄存器上。</p>
+<p> 如果 esp 与 ebp 即将发生冲突，指<strong>虚拟栈操作与真实栈帧寻址之间的逻辑冲突</strong>。VMP 会将当前虚拟机上下文保存到真实堆栈，然后开辟新的虚拟堆栈空间，确保虚拟机正常运行。对于多线程程序， VMP 会为每个线程维护独立的虚拟机上下文(VMContext),不同线程的虚拟机之间相互隔离。</p>
+<blockquote>
+<p>为什么会冲突？</p>
+<p><strong>首先，ebp在VMP虚拟环境中被当作“通用寄存器”或“虚拟寄存器索引”</strong></p>
+<p><strong>所以当 ebp 被用于固定偏移寻址 VM_Context，而 esp 因为 Handler 内部的 push&#x2F;call 操作发生不可预测的变化时，就会出现“寻址基准不稳定”的冲突。</strong></p>
+<ul>
+<li><strong>ebp 不再是栈帧基址</strong>，而是虚拟机上下文（VM_Context）的<strong>固定基址指针</strong>或<strong>普通临时寄存器</strong>。</li>
+<li>“esp 与 ebp 冲突”的本质，是<strong>活动的堆栈指针（esp）破坏了固定偏移寻址的稳定性</strong>，而 ebp 恰恰是维持这种稳定性的关键锚点。</li>
+<li>VMP 通过<strong>固化 ebp 指向上下文</strong>或<strong>切换隔离堆栈</strong>的方式，保证无论 esp 如何变化，虚拟机都能正确访问自己的虚拟寄存器。</li>
+</ul>
+</blockquote>
+<p> 虚拟堆栈：只是块普通内存，完全由软件模拟</p>
+<p> 真实堆栈：CPU 硬件使用的堆栈，兼任临时仓库</p>
+</li>
+<li><p>虚拟化指令执行完之后，需要等待整个受保护代码块执行完毕或者发生异常才会退出虚拟化环境，恢复真实环境。退出环境时，虚拟机会恢复原始的寄存器状态，并确保所有上下文环境都恢复正确。不过在退出之前，还需要将虚拟寄存器的值写回到真实寄存器，并解除之前所做的系统API hook。</p>
+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">    ; 定义 JUMPADDR 表，每个条目存储一个处理程序的地址</span><br><span class="line">    JUMPADDR dd Handler0, Handler1, Handler2, ...  ; </span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line">    global VStartVM</span><br><span class="line"></span><br><span class="line">VStartVM:</span><br><span class="line">    pusha                       ; 保存所有通用寄存器的状态到堆栈</span><br><span class="line">    push ebx</span><br><span class="line">    push ecx</span><br><span class="line">    push edx</span><br><span class="line">    push esi</span><br><span class="line">    push edi</span><br><span class="line">    push ebp</span><br><span class="line">    pushfd</span><br><span class="line"></span><br><span class="line">    ; 设置虚拟机寄存器和堆栈</span><br><span class="line">    mov esi, [esp + 0x20]       ; 将堆栈上的值（字节码地址）加载到 ESI</span><br><span class="line">    mov ebp, esp                ; 设置 EBP 为当前 ESP（虚拟机栈）</span><br><span class="line">    sub esp, 0x200              ; 为虚拟机栈分配空间</span><br><span class="line">    mov edi, esp                ; 设置 EDI 为新的 ESP（虚拟机上下文）</span><br><span class="line"></span><br><span class="line">    ; 进入虚拟机调度循环</span><br><span class="line">    jmp VMDispatcher</span><br><span class="line"></span><br><span class="line">VMDispatcher:</span><br><span class="line">    mov al, byte ptr [esi]      ; 从 ESI 指向的字节码地址处读取一个字节（操作码）</span><br><span class="line">    inc esi                     ; 增加 ESI，使其指向下一个字节</span><br><span class="line">    movzx eax, al               ; 将 AL 扩展为 EAX</span><br><span class="line">    mov eax, dword ptr [eax * 4 + JUMPADDR]  ; 根据操作码从 JUMPADDR 表中获取处理程序的地址</span><br><span class="line">    jmp eax                     ; 跳转到处理程序地址执行</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><strong>edi 指向 VMContext 的起始值</strong><ul>
+<li><code>edi</code>寄存器在虚拟机执行过程中始终指向 VMContext 结构体的内存地址。通过这个地址，虚拟机可以方便地访问和修改虚拟寄存器的状态。</li>
+</ul>
+</li>
+<li><strong>esi 指向字节码的地址</strong><ul>
+<li><code>esi</code>寄存器指向包含字节码指令的内存区域。虚拟机解释器通过<code>esi</code>逐条读取字节码指令，并根据指令操作码执行相应的 Handler。</li>
+</ul>
+</li>
+<li><strong>ebp 指向 VM 栈地址</strong><ul>
+<li><code>ebp</code>寄存器在虚拟机执行过程中用于指向虚拟机栈的基址。虚拟机栈用于存储局部变量、函数参数和返回地址等。</li>
+</ul>
+</li>
+</ol>
+<h2 id="Handler设计：其实就是在模拟指令的执行"><a href="#Handler设计：其实就是在模拟指令的执行" class="headerlink" title="Handler设计：其实就是在模拟指令的执行"></a>Handler设计：其实就是在模拟指令的执行</h2><p><strong>Handler &#x3D; 虚拟指令的”原理执行器”</strong></p>
+<p>VMP中的Handler并不是Windows中的句柄，而是<strong>一小段程序或者一段过程</strong>，它由VMP中的VMDispatcher调度。每个Handler对应一种字节码指令，负责执行特定的操作。</p>
+<p>Handler又分为俩大类，一类是<strong>辅助Handler</strong>，另一类是<strong>普通Handler</strong>。辅助Handler用于执行一些重要的、基本的指令，通常与虚拟机的核心功能和上下文管理有关，比如push和pop等处理栈的Handler；普通Handler用于执行常规的x86指令，比如一些算术运算、逻辑运算或者是比较和分支。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Push:</span><br><span class="line">    ; 获取要压入栈的值，假设值在 eax 中</span><br><span class="line">    sub ebp, 4               ; 栈指针向下移动，预留出4个字节的空间</span><br><span class="line">    mov [ebp], eax           ; 将 eax 中的值压入栈顶</span><br><span class="line">    jmp VMDispatcher         ; 返回调度器</span><br><span class="line"></span><br><span class="line">Pop:</span><br><span class="line">    ; 将栈顶的值弹出到 eax 中</span><br><span class="line">    mov eax, [ebp]           ; 从栈顶获取值到 eax</span><br><span class="line">    add ebp, 4               ; 栈指针向上移动，释放4个字节的空间</span><br><span class="line">    jmp VMDispatcher         ; 返回调度器</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Add:</span><br><span class="line">    mov eax, [edi + 0]        ; 从虚拟寄存器 v_eax 中加载值到 eax</span><br><span class="line">    mov ebx, [edi + 4]        ; 从虚拟寄存器 v_ebx 中加载值到 ebx</span><br><span class="line">    add eax, ebx              ; 执行加法运算</span><br><span class="line">    mov [edi + 0], eax        ; 将结果存回虚拟寄存器 v_eax</span><br><span class="line">    jmp VMDispatcher          ; 返回调度器</span><br><span class="line"></span><br><span class="line">Sub:</span><br><span class="line">    mov eax, [edi + 0]</span><br><span class="line">    mov ebx, [edi + 4]</span><br><span class="line">    sub eax, ebx</span><br><span class="line">    mov [edi + 0], eax</span><br><span class="line">    jmp VMDispatcher</span><br><span class="line"></span><br><span class="line">And:</span><br><span class="line">    mov eax, [edi + 0]</span><br><span class="line">    mov ebx, [edi + 4]</span><br><span class="line">    and eax, ebx</span><br><span class="line">    mov [edi + 0], eax</span><br><span class="line">    jmp VMDispatcher</span><br><span class="line"></span><br><span class="line">Mov:</span><br><span class="line">    mov eax, [esi]            ; 读源寄存器索引</span><br><span class="line">    mov ebx, [esi + 1]        ; 读目标寄存器索引</span><br><span class="line">    mov ecx, [edi + eax * 4]  ; 从源虚拟寄存器加载值到 ecx</span><br><span class="line">    mov [edi + ebx * 4], ecx  ; 将值存到目标虚拟寄存器</span><br><span class="line">    add esi, 2                ; 跳过字节码中的源和目标寄存器索引</span><br><span class="line">    jmp VMDispatcher</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">VStcHandler:</span><br><span class="line">    pushfd                     ; 保存当前 EFLAGS 到栈中</span><br><span class="line">    pop eax                    ; 将 EFLAGS 存入 eax</span><br><span class="line">    mov [edi + 0x1C], eax      ; 保存 EFLAGS 到虚拟机上下文的 v_efl</span><br><span class="line"></span><br><span class="line">    stc                        ; 设置进位标志（CF）</span><br><span class="line"></span><br><span class="line">    pushfd                     ; 将修改后的 EFLAGS 保存到栈中</span><br><span class="line">    pop eax                    ; 将修改后的 EFLAGS 存入 eax</span><br><span class="line">    mov [edi + 0x1C], eax      ; 更新虚拟机上下文中的 v_efl</span><br><span class="line"></span><br><span class="line">    jmp VMDispatcher           ; 返回调度器</span><br></pre></td></tr></table></figure>
+<h2 id="VMP壳详细分析"><a href="#VMP壳详细分析" class="headerlink" title="VMP壳详细分析"></a>VMP壳详细分析</h2><p>VMP（VMProtect）是俄罗斯公司开发的一款强加密壳，以代码虚拟化闻名。我会从原理讲起，然后给你一个完整的脱壳实例。</p>
+<h3 id="VMP壳的核心原理"><a href="#VMP壳的核心原理" class="headerlink" title="VMP壳的核心原理"></a>VMP壳的核心原理</h3><p>VMP有三大保护机制：</p>
+<ol>
+<li>代码变异（Mutation）<br>把原始指令替换成功能等价但形式不同的指令序列，让静态分析失效。</li>
+<li>代码虚拟化（Virtualization）<br>这是VMP的杀手锏。它将原始x86&#x2F;x64指令翻译成自定义的字节码，运行时由一个内嵌的解释器逐条执行。你看到的不是原始CPU指令，而是一个“虚拟机”在执行未知指令集。</li>
+<li>反调试&#x2F;反篡改<br>检测调试器、检查断点、CRC完整性校验等。<br><img src="/img/image-216.png"></li>
+</ol>
+<h3 id="加密壳加壳："><a href="#加密壳加壳：" class="headerlink" title="加密壳加壳："></a>加密壳加壳：</h3><p>写一个简单的creakme</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#include&lt;bits/stdc++.h&gt;</span></span><br><span class="line"><span class="comment">#include&lt;windows.h&gt;</span></span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">int <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;please enter your pwd &gt;&gt;&quot;</span>);</span><br><span class="line">	string s;</span><br><span class="line">	cin&gt;&gt;s;</span><br><span class="line">	<span class="keyword">if</span>(s==<span class="string">&quot;123456&quot;</span>)&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;successful!\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span>&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;faild!\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">	<span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>加壳：<br>对程序加壳，程序加壳时：用了VMProtect<br>加壳大多放在程序真正的入口处，包裹着整个程序。<br><img src="/img/image-217.png"><br>用PE进程查看器查看PE的区块，发现多出vmp0 等区块<br><img src="/img/image-218.png"><br>在这里，vpm0的区块被加密，不直接显示vpm0：<br>出现了  .tls 、 .*T 、 .D(5 、 .{P’  这些乱码&#x2F;非标准名称区段，这是 VMProtect 3.x及以后新版本 的典型特征<br>新旧版VMP区段区别<br> 老版本VMP（1.x&#x2F;2.x）：直接新建  .vmp0 （虚拟机引擎）、 .vmp1 （加密代码） 两个区段，名字很直观<br>新版本VMP（3.x+）：</p>
+<ol>
+<li>不再用 .vmp0 ，把壳代码拆成多个乱名区段： .tls 、 .*T 、 .D(5 、 .{P’ 等</li>
+<li>保留原有 .text &#x2F; .data 等原生区段，但内部代码已经被VMP虚拟化加密</li>
+<li>用TLS回调（ .tls 区段）做入口，替代传统OEP，是VMP高级保护的标志<br><img src="/img/image-219.png"><br>这就是加壳后被隐藏的代码。</li>
+</ol>
+<h3 id="脱壳实战完整步骤"><a href="#脱壳实战完整步骤" class="headerlink" title="脱壳实战完整步骤"></a>脱壳实战完整步骤</h3><p>下面以一个32位VMP保护的程序为例（用x64dbg + Scylla），演示完整流程。<br>“这部分尝试了一部分有点进行不下去了，之后两周内补充”</p>
+<h3 id="脱壳思路总结"><a href="#脱壳思路总结" class="headerlink" title="脱壳思路总结:"></a>脱壳思路总结:</h3><p>接触到现在我仍然觉得exe文件脱壳就是万年不变的esp定律</p>
+<ol>
+<li>找到原始OEP并Dump — 程序自解密完成后、VM执行前的那一刻</li>
+<li>修复导入表和重定位 — 让Dump出的文件可正常运行<br>在万年不变的基础上灵活变通一点，对VMP虚拟化特征进行处理一下，最后修复与重建可执行文件。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/SAoIirse/SAoIirse.github.io">Saoirse</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://saoirse.github.io/2026/05/24/VMP%E7%B1%BB%E5%9E%8B/">https://saoirse.github.io/2026/05/24/VMP类型/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://saoirse.github.io" target="_blank">Saoirse's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B7%B7%E6%B7%86%E4%B8%8E%E5%8F%8D%E6%B7%B7%E6%B7%86/">混淆与反混淆</a></div><div class="post-share"><div class="social-share" data-image="/img/20260926174757_12_58.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/05/24/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级"><img class="cover" src="/img/20260806220242_10_21.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">VM虚拟机逆向--青铜级</div></div><div class="info-2"><div class="info-item-1">首先这里的虚拟机往往不是商业的vmp之类的保护软件，而是出题人实现的小型虚拟机，题目本身一般也没有实现某些复杂的功能。【这里的虚拟机指的是一种解释执行系统或者模拟器。】逆向中的虚拟机保护是一种基于虚拟机的代码保护技术。它将基于x86汇编系统中的可执行代码转换为字节码指令系统的代码（就是数据），来达到不被轻易逆向和篡改的目的。简单点说就是将程序的代码转换自定义的操作码(opcode)，然后在程序执行时再通过解释这些操作码，选择对应的函数执行，从而实现程序原有的功能。  其实，我认为VM类型混淆就是在真正的代码上转换几层汇编语言，又或者是自定义的类汇编语言。不过更难的是，在VM中还原出来的代码还存在混淆，混淆的叠加。这部分内容可能对于ai来讲都不是什么难题了，很快就能梭哈，但手解确实还需要一定时间和耐心，在混淆这块这被ai达仁踹烂了。  内容核心VM题目的程序有一套自己的循环流程。例如： 1234567while(i&lt;len(opcode)):    if(opcode[i]==0x00):        i+=1    elif(opcode[i]==0x01):      ...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E8%99%9A%E5%81%87%E6%8E%A7%E5%88%B6%E6%B5%81/" title="OLLVM - 虚假控制流篇"><img class="cover" src="/img/20260826210102_25_221.jpg" onerror="onerror=null;src='/img/pageerror.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">OLLVM - 虚假控制流篇</div></div><div class="info-2"><div class="info-item-1">核心思路是插入一些看起来会影响程序走向，但实际上永远不会执行或结果恒定的分支和跳转 虚假控制流的混淆代码特征：不透明谓词这是最核心的构造。指一个条件表达式的结果对分析者难以推断，但在运行时是恒定不变的。比如精心构造一个总是为真或总是为假的数学算式。反编译器无法轻易将其优化掉，就只能保留那些永远不会执行的分支。其实就是ida里面看到的静态时值为’ ？’的变量，但能够明确知道它的值是0 垃圾代码放在虚假分支里的无用指令，永远不执行，但会出现在反编译结果中，干扰阅读。在垃圾代码中，我们把一整个基块都是垃圾指令的叫做不可达基块 虚假循环和分支嵌套把一段简单的直线代码，用多个虚假条件判断包裹起来，或者把它放在一个看似复杂、实际只执行一次的循环里，让控制流图（CFG）变得异常复杂。 第一种：俄罗斯套娃示例：一个简单的代码：result &#x3D; a + b;进行控制流虚假化之后: 1234567891011121314151617// 第一层假判断if (opaque_true_1) &#123;    // 第二层假判断    if (opaque_true_2) &#123;    ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/05/24/OLLVM/" title="OLLVM -- 初识篇"><img class="cover" src="/img/20260826210054_20_221.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">OLLVM -- 初识篇</div></div><div class="info-2"><div class="info-item-1">OLLVM是一个基于LLVM架构的代码混淆工具，它在编译阶段将正常的代码”打碎”并”包装”，让程序变得极其复杂难读。主要的混淆手段是三个部分，控制流平坦化，虚假控制流，指令替换 前情提要LLVM18.8LLVM是一套编译器基础设施项目，分为前端、中间层标识（IR）、后端。前端就包括Clang、Rustc等，前端负责将对应语言的源代码转为中间层代码（IR），后端负责将IR转为特定平台的机器码或汇编代码。 LLVM编译环境的安装在学习之前，需要我们先安装LLVM的编译环境：推荐在WSL环境中配置Ubuntu22.4，之后安装环境：如果没有启动WSL的Linux子系统则需要先完成这一步，这里我参考了大佬的文章https://zhuanlan.zhihu.com/p/1999452689084461584可能电脑不同也会出现各种不一样的问题，更详细的问deepseek跟着修就ok 从 Gitee 镜像克隆我看了很多文章都提倡从Github中拉取，但我安装时一直显示网络断开连接，拉不出来。最后尝试多种方法，给出以下解决方案 1git clone --depth 1 --branch llv...</div></div></div></a><a class="pagination-related" href="/2026/05/24/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级"><img class="cover" src="/img/20260806220242_10_21.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">VM虚拟机逆向--青铜级</div></div><div class="info-2"><div class="info-item-1">首先这里的虚拟机往往不是商业的vmp之类的保护软件，而是出题人实现的小型虚拟机，题目本身一般也没有实现某些复杂的功能。【这里的虚拟机指的是一种解释执行系统或者模拟器。】逆向中的虚拟机保护是一种基于虚拟机的代码保护技术。它将基于x86汇编系统中的可执行代码转换为字节码指令系统的代码（就是数据），来达到不被轻易逆向和篡改的目的。简单点说就是将程序的代码转换自定义的操作码(opcode)，然后在程序执行时再通过解释这些操作码，选择对应的函数执行，从而实现程序原有的功能。  其实，我认为VM类型混淆就是在真正的代码上转换几层汇编语言，又或者是自定义的类汇编语言。不过更难的是，在VM中还原出来的代码还存在混淆，混淆的叠加。这部分内容可能对于ai来讲都不是什么难题了，很快就能梭哈，但手解确实还需要一定时间和耐心，在混淆这块这被ai达仁踹烂了。  内容核心VM题目的程序有一套自己的循环流程。例如： 1234567while(i&lt;len(opcode)):    if(opcode[i]==0x00):        i+=1    elif(opcode[i]==0x01):      ...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E8%99%9A%E5%81%87%E6%8E%A7%E5%88%B6%E6%B5%81/" title="OLLVM - 虚假控制流篇"><img class="cover" src="/img/20260826210102_25_221.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">OLLVM - 虚假控制流篇</div></div><div class="info-2"><div class="info-item-1">核心思路是插入一些看起来会影响程序走向，但实际上永远不会执行或结果恒定的分支和跳转 虚假控制流的混淆代码特征：不透明谓词这是最核心的构造。指一个条件表达式的结果对分析者难以推断，但在运行时是恒定不变的。比如精心构造一个总是为真或总是为假的数学算式。反编译器无法轻易将其优化掉，就只能保留那些永远不会执行的分支。其实就是ida里面看到的静态时值为’ ？’的变量，但能够明确知道它的值是0 垃圾代码放在虚假分支里的无用指令，永远不执行，但会出现在反编译结果中，干扰阅读。在垃圾代码中，我们把一整个基块都是垃圾指令的叫做不可达基块 虚假循环和分支嵌套把一段简单的直线代码，用多个虚假条件判断包裹起来，或者把它放在一个看似复杂、实际只执行一次的循环里，让控制流图（CFG）变得异常复杂。 第一种：俄罗斯套娃示例：一个简单的代码：result &#x3D; a + b;进行控制流虚假化之后: 1234567891011121314151617// 第一层假判断if (opaque_true_1) &#123;    // 第二层假判断    if (opaque_true_2) &#123;    ...</div></div></div></a><a class="pagination-related" href="/2026/05/24/SMC/" title="SMC"><img class="cover" src="/img/20260702160038_24_130.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">SMC</div></div><div class="info-2"><div class="info-item-1">SMC混淆SMC混淆是一种自修改代码技术，通过在程序运行时动态解密加密的代码段，防止静态分析和逆向工程。 123456IF .运行条件满足  CALL DecryptProc （Address of MyProc）;对某个函数代码解密  ........  CALL MyProc                           ;调用这个函数  ........  CALL EncryptProc （Address of MyProc）;再对代码进行加密，防止程序被Dump SMC混淆原理：SMC最直接的方式是通过修改PE文件的数据段和代码段来进行混淆，或者通过修改PE文件的Section Header,搭配使用API Hook实现代码加密和解密，同时会在加密过程中使用VMProtect等第三方加密工具。因此在SMC中存在标志函数：VirtualProtect（），并且SMC中还会出现代码爆红现象，跟踪到汇编代码就能看到爆红部分是大片的数据，如下图所示。 反混淆方式大多数题目在代码中都是能够找到SMC加密逻辑的，只不过有的可能在反编译的时候就能看到，有的只能在汇编看到。只要能...</div></div></div></a><a class="pagination-related" href="/2026/05/24/flower/" title="A Beautiful Flower"><img class="cover" src="/img/260621203457_8_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">A Beautiful Flower</div></div><div class="info-2"><div class="info-item-1"> 重新更这篇花指令的文章是在很久没有碰到过花指令之后了，突然还是很感慨的，这是我进入走入逆向工程学习的第一个知识。花指令即在代码中加入垃圾代码块，但不妨碍程序正常执行流程，其最终目的是干扰ida等软件对程序的静态分析，使调试工具无法正常反汇编出伪代码。常见花指令包含：跳转类，栈堆平衡类以及特权指令和无效字节类。  原理利用了ida常用的反汇编算法[线性扫描以及递归行进]逐行反汇编导致无法将数据和内容区分的特性&#x2F;按照代码可能执行顺序进行反汇编程序的特性。花指令实现方式：1）无效跳转和垃圾字节；2）利用反汇编线性扫描缺陷；3）修改返回地址；4）多态变形 在程序中会执行的花指令可执行花指令指的是花指令代码在程序的正常执行过程中会被执行，但执行这些代码没有任何意义，执行前后不改变任何寄存器的值，同时这部分代码也会被反汇编器正常识别。 压栈后恢复栈地址通过压栈和修改栈指针来干扰反汇编器，但实际执行时会恢复栈指针，使得代码能正常执行。通常用于制造反汇编错误，使得静态分析工具无法正确识别指令边界，隐藏真实的代码逻辑。常见：在汇编语言中push是入栈，pop是出栈使用push指令将一些...</div></div></div></a><a class="pagination-related" href="/2026/05/24/%E6%8E%A7%E5%88%B6%E6%B5%81%E5%B9%B3%E5%9D%A6%E5%8C%96/" title="OLLVM -- 控制流平坦化篇"><img class="cover" src="/img/20260826210101_24_221.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-05-24</div><div class="info-item-2">OLLVM -- 控制流平坦化篇</div></div><div class="info-2"><div class="info-item-1">控制流平坦化就是在增加逻辑分析的负担，把原先简略的代码放到switch-case或者if-else的石山代码逻辑中。目的就是增加你分析的难度 核心原理：把原本有自己顺序的基本块打乱然后插入一个主分发器进行调用实现原本的程序逻辑，加入控制流平坦化的程序每执行一步都要返回给主分发器，由主分发器判断并执行下一步走哪个基本块 认识一下模块名称一张很经典的图：序言 ：函数的入口。初始化状态变量主分发器 (Main Dispatcher)通常是一个巨大的while(true) 循环，内部包裹switch(state)。读取状态值决定下一步走哪去子分发器 (Sub-Dispatcher) (变种)更复杂的 FLA 会嵌套多层 switch，或者使用数学公式计算跳转目标，进一步隐藏状态转移关系。真实块 (Relevant Blocks)：包含原始业务逻辑的代码块。它们不再直接跳转到下一个真实块，而是被“隔离”成了 switch 的一个个 case。预处理块 (Predispatcher) &#x2F; 状态更新每个真实块执行完后，先通过更新state 变量，然后无条件跳转回主分发器，再由分发器在...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="utterances-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/tou.jpg" onerror="this.onerror=null;this.src='/img/flink.jpg'" alt="avatar"/></div><div class="author-info-name">Saoirse</div><div class="author-info-description">学点逆向，每天拆拆拆不停</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">27</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SAoIirse"><i class="fab fa-github"></i><span>JMP WORD PTR [about me]</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">佛系更新Orz!</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#VMProtect-%E8%99%9A%E6%8B%9F%E5%8C%96%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">VMProtect 虚拟化原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VM%E8%99%9A%E6%8B%9F%E5%8C%96%E6%B5%81%E7%A8%8B%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">VM虚拟化流程：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Handler%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%85%B6%E5%AE%9E%E5%B0%B1%E6%98%AF%E5%9C%A8%E6%A8%A1%E6%8B%9F%E6%8C%87%E4%BB%A4%E7%9A%84%E6%89%A7%E8%A1%8C"><span class="toc-number">3.</span> <span class="toc-text">Handler设计：其实就是在模拟指令的执行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VMP%E5%A3%B3%E8%AF%A6%E7%BB%86%E5%88%86%E6%9E%90"><span class="toc-number">4.</span> <span class="toc-text">VMP壳详细分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#VMP%E5%A3%B3%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86"><span class="toc-number">4.1.</span> <span class="toc-text">VMP壳的核心原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A0%E5%AF%86%E5%A3%B3%E5%8A%A0%E5%A3%B3%EF%BC%9A"><span class="toc-number">4.2.</span> <span class="toc-text">加密壳加壳：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%84%B1%E5%A3%B3%E5%AE%9E%E6%88%98%E5%AE%8C%E6%95%B4%E6%AD%A5%E9%AA%A4"><span class="toc-number">4.3.</span> <span class="toc-text">脱壳实战完整步骤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%84%B1%E5%A3%B3%E6%80%9D%E8%B7%AF%E6%80%BB%E7%BB%93"><span class="toc-number">4.4.</span> <span class="toc-text">脱壳思路总结:</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/09/06/%E8%A5%BF%E6%B9%962022-1/" title="西湖论剑2022——Dualpersonality"><img src="/img/20260826210104_26_221.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="西湖论剑2022——Dualpersonality"/></a><div class="content"><a class="title" href="/2026/09/06/%E8%A5%BF%E6%B9%962022-1/" title="西湖论剑2022——Dualpersonality">西湖论剑2022——Dualpersonality</a><time datetime="2026-09-06T09:51:24.000Z" title="发表于 2026-09-06 17:51:24">2026-09-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/12/KALI2026/" title="KALI2026 - RE.WP(Faultline)"><img src="/img/20260811082018_15_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="KALI2026 - RE.WP(Faultline)"/></a><div class="content"><a class="title" href="/2026/08/12/KALI2026/" title="KALI2026 - RE.WP(Faultline)">KALI2026 - RE.WP(Faultline)</a><time datetime="2026-08-12T00:44:10.000Z" title="发表于 2026-08-12 08:44:10">2026-08-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/11/%E5%B7%85%E5%B3%B0%E6%9E%81%E5%AE%A2/" title="巅峰极客 - RE.WP"><img src="/img/20260811082018_15_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="巅峰极客 - RE.WP"/></a><div class="content"><a class="title" href="/2026/08/11/%E5%B7%85%E5%B3%B0%E6%9E%81%E5%AE%A2/" title="巅峰极客 - RE.WP">巅峰极客 - RE.WP</a><time datetime="2026-08-11T04:46:21.000Z" title="发表于 2026-08-11 12:46:21">2026-08-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/" title="黄鹤杯2026初赛 - RE.WP"><img src="/img/20260811082018_15_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="黄鹤杯2026初赛 - RE.WP"/></a><div class="content"><a class="title" href="/2026/08/11/%E9%BB%84%E9%B9%A4%E6%9D%AF2026%E5%88%9D%E8%B5%9B/" title="黄鹤杯2026初赛 - RE.WP">黄鹤杯2026初赛 - RE.WP</a><time datetime="2026-08-11T00:10:21.000Z" title="发表于 2026-08-11 08:10:21">2026-08-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/24/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级"><img src="/img/20260806220242_10_21.jpg" onerror="this.onerror=null;this.src='/img/pageerror.jpg'" alt="VM虚拟机逆向--青铜级"/></a><div class="content"><a class="title" href="/2026/05/24/VM%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%80%86%E5%90%91/" title="VM虚拟机逆向--青铜级">VM虚拟机逆向--青铜级</a><time datetime="2026-05-24T14:16:23.000Z" title="发表于 2026-05-24 22:16:23">2026-05-24</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/footer.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By Saoirse</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div><div class="footer_custom_text">欢迎来到我的魔法世界^^</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = null
+  const getUtterancesTheme = theme => theme === 'dark' ? 'photon-dark' : 'github-light'
+
+  const loadUtterances = (el = document, key) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyUtterances = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const config = {
+      src: 'https://utteranc.es/client.js',
+      repo: 'SAoIirse/SAoIirse.github.io',
+      theme: getUtterancesTheme(document.documentElement.getAttribute('data-theme')),
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      'issue-term': isShuoshuo ? key : (option && option['issue-term']) || 'pathname'
+    }
+
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => ele.setAttribute(key, value))
+    el.querySelector('#utterances-wrap').appendChild(ele)
+  }
+
+  const changeUtterancesTheme = theme => {
+    const iframe = document.querySelector('#utterances-wrap iframe')
+    if (iframe) {
+      const message = {
+        type: 'set-theme',
+        theme: getUtterancesTheme(theme)
+      };
+      iframe.contentWindow.postMessage(message, 'https://utteranc.es')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeUtterancesTheme, 'utterances')
+
+  if (isShuoshuo) {
+    'Utterances' === 'Utterances'
+      ? window.shuoshuoComment = { loadComment: loadUtterances }
+      : window.loadOtherComment = loadUtterances
+    return
+  }
+  
+  if ('Utterances' === 'Utterances' || !false) {
+    if (false) btf.loadComment(document.getElementById('utterances-wrap'), loadUtterances)
+    else loadUtterances()
+  } else {
+    window.loadOtherComment = loadUtterances
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
